@@ -6,6 +6,9 @@ The classic game of Tetris. Blocks are dropped into a grid and may be moved and 
 - Use all 7 Tetris shapes
 - Blocks must fall automatically
 - Completed lines must clear
+- Levels (speed increases over time)
+- Seperate soft drop and hard drop
+- Regulate lock time
 
 ## Nice to Have List
 - Menu Screen
@@ -14,10 +17,7 @@ The classic game of Tetris. Blocks are dropped into a grid and may be moved and 
 - Ghost block (shows where block will land)
 - Up next in the UI
 - Ability to hold a block
-- Levels (speed increases over time)
 - Proper scoring system
-- Seperate soft drop and hard drop
-- Regulate lock time
 - Wall kicks (move the block slightly to allow rotations)
 - Use Tetris official randomizer
 - Blocks use images instead of p5js coloring

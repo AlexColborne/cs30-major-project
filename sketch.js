@@ -17,7 +17,7 @@ function draw() {
   background(220);
   tetrisOne.drawGrid();
   if(!tetrisOne.lose) {
-    if(frameCount % 20 === 0) {
+    if(frameCount % tetrisOne.frames === 0) {
       tetrisOne.gridFall();
     }
     tetrisOne.drop();
@@ -80,6 +80,8 @@ class Tetris {
     }
     this.lose = false;
     this.resetColor = color(220);
+    this.level = 1;
+    this.frames = 48;
   }
 
   blockSpawner() {
@@ -279,6 +281,14 @@ class Tetris {
       }
     }
   
+  }
+
+  recordScore() {
+
+  }
+
+  level() {
+    if(level)
   }
 
   drop() {

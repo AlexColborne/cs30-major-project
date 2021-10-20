@@ -21,6 +21,7 @@ function draw() {
     if(frameCount % tetrisOne.frames === 0) {
       tetrisOne.gridFall();
     }
+    tetrisOne.lock();
     tetrisOne.drop();
   }
   else {
@@ -86,6 +87,8 @@ class Tetris {
     this.linesCleared = 0;
     this.newLinesCleared;
     this.score = 0;
+    this.lockTime = 0;
+    this.stuck = false;
   }
 
   blockSpawner() {
@@ -204,8 +207,8 @@ class Tetris {
                   }
                 }
               }
-              this.newLinesCleared = 0;
-              this.clearLineCheck();
+              this.stuck = true;
+              this.lockTime = millis() + 500;
               return;
             } 
           } 
@@ -217,14 +220,22 @@ class Tetris {
                 }
               }
             }
-            this.newLinesCleared = 0;
-            this.clearLineCheck();
+            this.stuck = true;
+            this.lockTime = millis() + 500;
             return;
           } 
         }
       }
     }
     this.droppingGrid = gridDropCheck;
+  }
+
+  lock() {
+    if(this.lockTime < millis() && this.stuck) {
+      this.newLinesCleared = 0;
+      this.clearLineCheck();
+      this.stuck = false;
+    }
   }
 
   clearLineCheck() {

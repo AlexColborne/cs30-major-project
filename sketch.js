@@ -16,6 +16,7 @@ function setup() {
 function draw() {
   background(220);
   tetrisOne.drawGrid();
+  tetrisOne.displayScore();
   if(!tetrisOne.lose) {
     if(frameCount % tetrisOne.frames === 0) {
       tetrisOne.gridFall();
@@ -81,7 +82,10 @@ class Tetris {
     this.lose = false;
     this.resetColor = color(220);
     this.level = 1;
-    this.frames = 48;
+    this.frames = 43;
+    this.linesCleared = 0;
+    this.newLinesCleared;
+    this.score = 0;
   }
 
   blockSpawner() {
@@ -200,6 +204,7 @@ class Tetris {
                   }
                 }
               }
+              this.newLinesCleared = 0;
               this.clearLineCheck();
               return;
             } 
@@ -212,6 +217,7 @@ class Tetris {
                 }
               }
             }
+            this.newLinesCleared = 0;
             this.clearLineCheck();
             return;
           } 
@@ -232,11 +238,37 @@ class Tetris {
         }
         if(counter === 10) {
           this.clearLine(y);
+          this.recordScore();
         }
       }
     }
     this.loseCheck();
     this.blockSpawner();
+  }
+
+  recordScore() {
+    this.newLinesCleared++;
+    if(this.newLinesCleared === 1) {
+      this.score += this.level * 100;
+    }
+    else if(this.newLinesCleared < 4) {
+      this.score += this.level * 200;
+    }
+    else {
+      this.score += this.level * 300;
+    }
+  }
+
+  displayScore() {
+    //displays how many lines have been cleared in the top right
+    textSize(this.cellSize * 1.5);
+    fill("red");
+    textAlign(LEFT, TOP);
+    text("Score:", width/2 + this.cellSize * 5.5, this.cellSize / 2);
+    text(this.score, width/2 + this.cellSize * 5.5, this.cellSize * 2);
+    textAlign(RIGHT, TOP);
+    text("Level:", width/2 - this.cellSize * 5.5, this.cellSize / 2);
+    text(this.level, width/2 - this.cellSize * 5.5, this.cellSize * 2);
   }
 
   loseScreen() {
@@ -249,7 +281,7 @@ class Tetris {
     strokeWeight(this.cellSize / 10);
     text("You Lost!", width/2, height/4);
     textSize(this.cellSize * 1.5);
-    text("You Cleared " + "n / a" + " Lines!", width/2, height / 2);
+    text("You Cleared " + this.linesCleared + " Lines!", width/2, height / 2);
 
     //reset button
     stroke("black");
@@ -280,15 +312,56 @@ class Tetris {
         this.staticGrid[y][x] = this.staticGrid[y-1][x];
       }
     }
-  
+    this.linesCleared++;
+    this.setLevel();
   }
 
-  recordScore() {
-
-  }
-
-  level() {
-    if(level)
+  setLevel() {
+    if(this.linesCleared % 10 === 0) {
+      this.level++;
+    }
+    if(this.level === 1) {
+      this.frames = 43;
+    }
+    else if(this.level === 2) {
+      this.frames = 38;
+    }
+    else if(this.level === 3) {
+      this.frames = 33;
+    }
+    else if(this.level === 4) {
+      this.frames = 28;
+    }
+    else if(this.level === 5) {
+      this.frames = 23;
+    }
+    else if(this.level === 6) {
+      this.frames = 18;
+    }
+    else if(this.level === 7) {
+      this.frames = 13;
+    }
+    else if(this.level === 8) {
+      this.frames = 8;
+    }
+    else if(this.level === 9) {
+      this.frames = 6;
+    }
+    else if(this.level >= 10 && this.level <= 12) {
+      this.frames = 5;
+    }
+    else if(this.level >= 13 && this.level <= 15) {
+      this.frames = 4;
+    }
+    else if(this.level >= 16 && this.level <= 18) {
+      this.frames = 3;
+    }
+    else if(this.level >= 19 && this.level <= 28) {
+      this.frames = 2;
+    }
+    else if(this.level >= 29) {
+      this.frames = 1;
+    }
   }
 
   drop() {

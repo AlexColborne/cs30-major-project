@@ -87,7 +87,8 @@ class Tetris {
     this.linesCleared = 0;
     this.newLinesCleared;
     this.score = 0;
-    this.lockTime = 0;
+    this.lockTime = 500;
+    this.lockTimer = 0;
     this.stuck = false;
   }
 
@@ -181,57 +182,72 @@ class Tetris {
   }
 
   gridFall() {
-    //creates new grid identical the one dropping a piece
-    let gridDropCheck = [];
-    for(let y = 0; y < this.gridHeight; y++) {
-      gridDropCheck.push([]);
-      for(let x = 0; x < this.gridWidth; x++) {
-        gridDropCheck[y].push(this.droppingGrid[y][x]);
-      }
-    }
-
-    //checks if block can fall
-    for(let y = this.gridHeight-1; y >= 0; y--) {
-      for(let x = this.gridWidth-1; x >= 0; x--) {
-        if(gridDropCheck[y][x] !== 0) {    
-          if(y < this.gridHeight-1) {
-            if(this.staticGrid[y+1][x] === 0) {
-              gridDropCheck[y+1][x] = gridDropCheck[y][x];
-              gridDropCheck[y][x] = 0;
-            }
-            else {
-              for(let y2 = 0; y2 < this.gridHeight; y2++) { 
-                for(let x2 = 0; x2 < this.gridWidth; x2++) {
-                  if(this.droppingGrid[y2][x2] !== 0) {
-                    this.staticGrid[y2][x2] = this.droppingGrid[y2][x2];
-                  }
-                }
-              }
-              this.stuck = true;
-              this.lockTime = millis() + 500;
-              return;
-            } 
-          } 
-          else {
-            for(let y2 = 0; y2 < this.gridHeight; y2++) { 
-              for(let x2 = 0; x2 < this.gridWidth; x2++) {
-                if(this.droppingGrid[y2][x2] !== 0) {
-                  this.staticGrid[y2][x2] = this.droppingGrid[y2][x2];
-                }
-              }
-            }
-            this.stuck = true;
-            this.lockTime = millis() + 500;
-            return;
-          } 
+    if(this.stuck === false) {
+      //creates new grid identical the one dropping a piece
+      let gridDropCheck = [];
+      for(let y = 0; y < this.gridHeight; y++) {
+        gridDropCheck.push([]);
+        for(let x = 0; x < this.gridWidth; x++) {
+          gridDropCheck[y].push(this.droppingGrid[y][x]);
         }
       }
+  
+      //checks if block can fall
+      for(let y = this.gridHeight-1; y >= 0; y--) {
+        for(let x = this.gridWidth-1; x >= 0; x--) {
+          if(gridDropCheck[y][x] !== 0) {    
+            if(y < this.gridHeight-1) {
+              if(this.staticGrid[y+1][x] === 0) {
+                gridDropCheck[y+1][x] = gridDropCheck[y][x];
+                gridDropCheck[y][x] = 0;
+              }
+              else {
+                this.stuck = true;
+                this.lockTimer = millis() + this.lockTime;
+                return;
+              } 
+            } 
+            else {
+              this.stuck = true;
+              this.lockTimer = millis() + this.lockTime;
+              return;
+            } 
+          }
+        }
+      }
+      this.droppingGrid = gridDropCheck;
     }
-    this.droppingGrid = gridDropCheck;
   }
 
   lock() {
-    if(this.lockTime < millis() && this.stuck) {
+    if(this.stuck === true) {
+      let stuckCount = 0;
+      //checks if block can fall
+      for(let y = 0; y < this.gridHeight; y++) {
+        for(let x = 0; x < this.gridWidth; x++) {
+          if(this.droppingGrid[y][x] !== 0) {   
+            if(y >= this.gridHeight-1) {
+              stuckCount++;
+            }
+            else if(this.staticGrid[y+1][x] !== 0) {
+              stuckCount++;
+            }
+          }
+        }
+      }
+      if(stuckCount === 0) {
+        this.stuck = false;
+      }
+    }
+
+    if(this.lockTimer < millis() && this.stuck) {
+      for(let y2 = 0; y2 < this.gridHeight; y2++) { 
+        for(let x2 = 0; x2 < this.gridWidth; x2++) {
+          if(this.droppingGrid[y2][x2] !== 0) {
+            this.staticGrid[y2][x2] = this.droppingGrid[y2][x2];
+          }
+        }
+      }
       this.newLinesCleared = 0;
       this.clearLineCheck();
       this.stuck = false;

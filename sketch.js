@@ -22,7 +22,7 @@ function draw() {
       tetrisOne.gridFall();
     }
     tetrisOne.lock();
-    tetrisOne.drop();
+    tetrisOne.softDrop();
   }
   else {
     tetrisOne.loseScreen();
@@ -54,6 +54,14 @@ function keyPressed() {
 
   if(keyCode === UP_ARROW) {
     tetrisOne.rotations();
+  }
+
+  if(keyCode === DOWN_ARROW) {
+    tetrisOne.softDropping = true;
+  }
+
+  if(keyCode === 32) {
+    tetrisOne.hardDrop();
   }
 }
 
@@ -90,6 +98,7 @@ class Tetris {
     this.lockTime = 500;
     this.lockTimer = 0;
     this.stuck = false;
+    this.softDropping = false;
   }
 
   blockSpawner() {
@@ -202,14 +211,20 @@ class Tetris {
                 gridDropCheck[y][x] = 0;
               }
               else {
+                if(this.hardDropping === false) {
+                  this.lockTimer = millis() + this.lockTime;
+                }
                 this.stuck = true;
-                this.lockTimer = millis() + this.lockTime;
+                this.hardDropping = false;
                 return;
               } 
             } 
             else {
+              if(this.hardDropping === false) {
+                this.lockTimer = millis() + this.lockTime;
+              }
               this.stuck = true;
-              this.lockTimer = millis() + this.lockTime;
+              this.hardDropping = false;
               return;
             } 
           }
@@ -240,7 +255,7 @@ class Tetris {
       }
     }
 
-    if(this.lockTimer < millis() && this.stuck) {
+    if(this.lockTimer < millis() && this.stuck === true) {
       for(let y2 = 0; y2 < this.gridHeight; y2++) { 
         for(let x2 = 0; x2 < this.gridWidth; x2++) {
           if(this.droppingGrid[y2][x2] !== 0) {
@@ -391,12 +406,27 @@ class Tetris {
     }
   }
 
-  drop() {
+  softDrop() {
     //accelerates the block when the down arrow is held down
-    if(keyIsDown(40)) {
-      if(frameCount % 3 === 0) {
-        tetrisOne.gridFall();
+    if(this.softDropping === true) {
+      if(keyIsDown(40)) {
+        if(frameCount % 3 === 0) {
+          tetrisOne.gridFall();
+        }
+        if(this.stuck === true) {
+          this.softDropping = false;
+        }
       }
+      else {
+        this.softDropping = false;
+      }
+    }
+  }
+
+  hardDrop() {
+    this.hardDropping = true;
+    for(let i = 0; i < 60; i++) {
+      this.gridFall();
     }
   }
 

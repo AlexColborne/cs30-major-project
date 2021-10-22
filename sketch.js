@@ -21,13 +21,14 @@ function draw() {
     if(frameCount % tetrisOne.frames === 0) {
       tetrisOne.gridFall();
     }
+    for(let i = 0; i < 60; i++) {
+      tetrisOne.ghostFall();
+    }
     tetrisOne.lock();
     tetrisOne.softDrop();
   }
   else {
     tetrisOne.loseScreen();
-    strokeWeight(10);
-    strokeWeight(2);
   }
 }
 
@@ -81,6 +82,7 @@ class Tetris {
     this.block;
     this.staticGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
+    this.ghostGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.state = 1;
     if(height / this.gridHeight <= width/12) {
       this.cellSize = height / this.gridHeight;
@@ -99,57 +101,91 @@ class Tetris {
     this.lockTimer = 0;
     this.stuck = false;
     this.softDropping = false;
+    this.cellColor = color(255, 255, 255);
+    this.blockArray = [];
   }
 
   blockSpawner() {
-    this.block = int(random(1, 8));
+    //chooses block
+    if(this.blockArray.length === 0) {
+      this.blockArray = [1, 2, 3, 4, 5, 6, 7];
+    }
+    this.block = this.blockArray.splice(int(random(0, this.blockArray.length)), 1);
+    this.block = this.block[0];
+
+    //places chosen block into the grid
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
+    this.ghostGrid = createEmptyGrid(this.gridWidth, this. gridHeight);
     if(this.block === 1) { //T block
       this.droppingGrid[0][4] = 1;
       this.droppingGrid[0][5] = 1;
       this.droppingGrid[0][6] = 1;
       this.droppingGrid[1][5] = 1;
+      this.ghostGrid[0][4] = 1;
+      this.ghostGrid[0][5] = 1;
+      this.ghostGrid[0][6] = 1;
+      this.ghostGrid[1][5] = 1;
       this.state = 1;
     }
-    if(this.block === 2) { //O block
+    else if(this.block === 2) { //O block
       this.droppingGrid[0][4] = 2;
       this.droppingGrid[0][5] = 2;
       this.droppingGrid[1][4] = 2;
       this.droppingGrid[1][5] = 2;
+      this.ghostGrid[0][4] = 2;
+      this.ghostGrid[0][5] = 2;
+      this.ghostGrid[1][4] = 2;
+      this.ghostGrid[1][5] = 2;
     }
-    if(this.block === 3) { //I block
+    else if(this.block === 3) { //I block
       this.droppingGrid[0][3] = 3;
       this.droppingGrid[0][4] = 3;
       this.droppingGrid[0][5] = 3;
       this.droppingGrid[0][6] = 3;
+      this.ghostGrid[0][3] = 3;
+      this.ghostGrid[0][4] = 3;
+      this.ghostGrid[0][5] = 3;
+      this.ghostGrid[0][6] = 3;
       this.state = 1;
     }
-    if(this.block === 4) { //J block
+    else if(this.block === 4) { //J block
       this.droppingGrid[0][4] = 4;
       this.droppingGrid[0][5] = 4;
       this.droppingGrid[0][6] = 4;
       this.droppingGrid[1][6] = 4;
       this.state = 1;
     }
-    if(this.block === 5) { //L block
+    else if(this.block === 5) { //L block
       this.droppingGrid[0][4] = 5;
       this.droppingGrid[0][5] = 5;
       this.droppingGrid[0][6] = 5;
       this.droppingGrid[1][4] = 5;
+      this.ghostGrid[0][4] = 5;
+      this.ghostGrid[0][5] = 5;
+      this.ghostGrid[0][6] = 5;
+      this.ghostGrid[1][4] = 5;
       this.state = 1;
     }
-    if(this.block === 6) { //S block
+    else if(this.block === 6) { //S block
       this.droppingGrid[0][5] = 6;
       this.droppingGrid[0][6] = 6;
       this.droppingGrid[1][5] = 6;
       this.droppingGrid[1][4] = 6;
+      this.ghostGrid[0][5] = 6;
+      this.ghostGrid[0][6] = 6;
+      this.ghostGrid[1][5] = 6;
+      this.ghostGrid[1][4] = 6;
       this.state = 1;
     }
-    if(this.block === 7) { //S block
+    else if(this.block === 7) { //S block
       this.droppingGrid[0][4] = 7;
       this.droppingGrid[0][5] = 7;
       this.droppingGrid[1][5] = 7;
       this.droppingGrid[1][6] = 7;
+      this.ghostGrid[0][4] = 7;
+      this.ghostGrid[0][5] = 7;
+      this.ghostGrid[1][5] = 7;
+      this.ghostGrid[1][6] = 7;
       this.state = 1;
     }
   }
@@ -158,30 +194,34 @@ class Tetris {
     //draws the grid and sets all blocks to the correct color
     for(let y = 0; y < this.gridHeight; y++) {
       for(let x = 0; x < this.gridWidth; x++) {
-        if(this.staticGrid[y][x] === 1 || this.droppingGrid[y][x] === 1) {
-          fill(128, 0, 128);
+        if(this.staticGrid[y][x] === 1 || this.droppingGrid[y][x] === 1 || this.ghostGrid[y][x] === 1) {
+          this.cellColor = color(128, 0, 128);
         }
-        else if(this.staticGrid[y][x] === 2 || this.droppingGrid[y][x] === 2) {
-          fill(255, 255, 0);
+        else if(this.staticGrid[y][x] === 2 || this.droppingGrid[y][x] === 2 || this.ghostGrid[y][x] === 2) {
+          this.cellColor = color(255, 255, 0);
         }
-        else if(this.staticGrid[y][x] === 3 || this.droppingGrid[y][x] === 3) {
-          fill(0, 255, 255);
+        else if(this.staticGrid[y][x] === 3 || this.droppingGrid[y][x] === 3 || this.ghostGrid[y][x] === 3) {
+          this.cellColor = color(0, 255, 255);
         }
-        else if(this.staticGrid[y][x] === 4 || this.droppingGrid[y][x] === 4) {
-          fill(0, 0, 255);
+        else if(this.staticGrid[y][x] === 4 || this.droppingGrid[y][x] === 4 || this.ghostGrid[y][x] === 4) {
+          this.cellColor = color(0, 0, 255);
         }
-        else if(this.staticGrid[y][x] === 5 || this.droppingGrid[y][x] === 5) {
-          fill(255, 127, 0);
+        else if(this.staticGrid[y][x] === 5 || this.droppingGrid[y][x] === 5 || this.ghostGrid[y][x] === 5) {
+          this.cellColor = color(255, 127, 0);
         }
-        else if(this.staticGrid[y][x] === 6 || this.droppingGrid[y][x] === 6) {
-          fill(0, 255, 0);
+        else if(this.staticGrid[y][x] === 6 || this.droppingGrid[y][x] === 6 || this.ghostGrid[y][x] === 6) {
+          this.cellColor = color(0, 255, 0);
         }
-        else if(this.staticGrid[y][x] === 7 || this.droppingGrid[y][x] === 7) {
-          fill(255, 0, 0);
+        else if(this.staticGrid[y][x] === 7 || this.droppingGrid[y][x] === 7 || this.ghostGrid[y][x] === 7) {
+          this.cellColor = color(255, 0, 0);
         }
         else if(this.staticGrid[y][x] === 0) {
-          fill(127, 127, 127);
+          this.cellColor = color(127, 127, 127);
         }
+        if(this.ghostGrid[y][x] !== 0 && this.droppingGrid[y][x] === 0) {
+          this.cellColor.setAlpha(25);
+        }
+        fill(this.cellColor);
         rect(x * this.cellSize + width/2 - this.cellSize * this.gridWidth/2, y*this.cellSize, this.cellSize);
       }
     }
@@ -231,6 +271,45 @@ class Tetris {
         }
       }
       this.droppingGrid = gridDropCheck;
+    }
+  }
+
+  ghostFall() {
+    if(this.stuck === false) {
+      //creates new grid identical the one dropping a piece
+      let gridDropCheck = [];
+      for(let y = 0; y < this.gridHeight; y++) {
+        gridDropCheck.push([]);
+        for(let x = 0; x < this.gridWidth; x++) {
+          gridDropCheck[y].push(this.ghostGrid[y][x]);
+        }
+      }
+  
+      //checks if block can fall
+      let counter = 0;
+      for(let y = this.gridHeight-1; y >= 0; y--) {
+        for(let x = this.gridWidth-1; x >= 0; x--) {
+          if(gridDropCheck[y][x] !== 0) {    
+            if(y < this.gridHeight-1) {
+              if(this.staticGrid[y+1][x] === 0) {
+                gridDropCheck[y+1][x] = gridDropCheck[y][x];
+                gridDropCheck[y][x] = 0;
+                counter++;
+                if(counter % 4 === 0) {
+                  this.ghostGrid = gridDropCheck;
+                }
+              }
+              else {
+                return;
+              }
+            } 
+            else {
+              return;
+            }
+          }
+        }
+      }
+      this.ghostGrid = gridDropCheck;
     }
   }
 
@@ -459,6 +538,7 @@ class Tetris {
         }
       }
       this.droppingGrid = gridLSideCheck;
+      this.ghostGrid = this.droppingGrid;
     }
 
     //move right using a second grid to check for valid moves
@@ -489,6 +569,7 @@ class Tetris {
         }
       }
       this.droppingGrid = gridRSideCheck;
+      this.ghostGrid = this.droppingGrid;
     }
   }
 
@@ -514,52 +595,35 @@ class Tetris {
                 gridRotateCheck[y][x+2] = 0;
 
                 this.state = 2;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 2) {
+            else if(this.state === 2) {
               if(x < this.gridWidth - 1 && y < this.gridHeight - 1 && this.staticGrid[y+1][x+1] === 0) {
                 gridRotateCheck[y+1][x+1] = 1;
                 gridRotateCheck[y+2][x] = 0;
 
                 this.state = 3;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 3) {
+            else if(this.state === 3) {
               if(y < this.gridHeight - 2 && this.staticGrid[y+2][x] === 0) {
                 gridRotateCheck[y+2][x] = 1;
                 gridRotateCheck[y+1][x-1] = 0;
 
                 this.state = 4;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 4) {
+            else if(this.state === 4) {
               if(x > 0 && y < this.gridHeight - 1 && this.staticGrid[y+1][x-1] === 0) {
                 gridRotateCheck[y+1][x-1] = 1;
                 gridRotateCheck[y][x] = 0;
 
                 this.state = 1;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
+            this.droppingGrid = gridRotateCheck;
+            this.ghostGrid = this.droppingGrid;
+            return;
           }
         }
       }
@@ -580,11 +644,6 @@ class Tetris {
                 gridRotateCheck[y][x+1] = 0;
                 gridRotateCheck[y][x+3] = 0;
                 this.state = 2;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
             else if(this.state === 2) {
@@ -598,11 +657,6 @@ class Tetris {
                 gridRotateCheck[y+3][x] = 0;
 
                 this.state = 3;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
             else if(this.state === 3) {
@@ -616,11 +670,6 @@ class Tetris {
                 gridRotateCheck[y][x+3] = 0;
 
                 this.state = 4;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
             else if(this.state === 4) {
@@ -634,13 +683,11 @@ class Tetris {
                 gridRotateCheck[y+3][x] = 0;
 
                 this.state = 1;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
+            this.droppingGrid = gridRotateCheck;
+            this.ghostGrid = this.droppingGrid;
+            return;
           }
         }
       }
@@ -661,14 +708,9 @@ class Tetris {
                 gridRotateCheck[y][x+2] = 0;
                 gridRotateCheck[y+1][x+2] = 0;
                 this.state = 2;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 2) {
+            else if(this.state === 2) {
               if(y < this.gridHeight - 1 && x > 0 && x < this.gridWidth - 1 && this.staticGrid[y][x-1] === 0 && this.staticGrid[y+1][x-1] === 0 && this.staticGrid[y+1][x+1] === 0) {
                 gridRotateCheck[y][x-1] = 4;
                 gridRotateCheck[y+1][x-1] = 4;
@@ -678,14 +720,9 @@ class Tetris {
                 gridRotateCheck[y+2][x] = 0;
                 gridRotateCheck[y+2][x-1] = 0;
                 this.state = 3;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 3) {
+            else if(this.state === 3) {
               if(y < this.gridHeight - 2 && x < this.gridWidth - 2 && this.staticGrid[y][x+1] === 0 && this.staticGrid[y][x+2] === 0 && this.staticGrid[y+2][x+1] === 0) {
                 gridRotateCheck[y][x+1] = 4;
                 gridRotateCheck[y][x+2] = 4;
@@ -695,14 +732,9 @@ class Tetris {
                 gridRotateCheck[y+1][x] = 0;
                 gridRotateCheck[y+1][x+2] = 0;
                 this.state = 4;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 4) {
+            else if(this.state === 4) {
               if(y < this.gridHeight - 1 && y > 0 && x < this.gridWidth - 1 && this.staticGrid[y+1][x-1] === 0 && this.staticGrid[y+1][x+1] === 0 && this.staticGrid[y+2][x+1] === 0) {
                 gridRotateCheck[y+1][x-1] = 4;
                 gridRotateCheck[y+1][x+1] = 4;
@@ -712,13 +744,11 @@ class Tetris {
                 gridRotateCheck[y][x+1] = 0;
                 gridRotateCheck[y+2][x] = 0;
                 this.state = 1;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
+            this.droppingGrid = gridRotateCheck;
+            this.ghostGrid = this.droppingGrid;
+            return;
           }
         }
       }
@@ -739,14 +769,9 @@ class Tetris {
                 gridRotateCheck[y+1][x] = 0;
                 gridRotateCheck[y][x+2] = 0;
                 this.state = 2;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 2) {
+            else if(this.state === 2) {
               if(y < this.gridHeight - 1 && x < this.gridWidth - 2 && this.staticGrid[y+1][x] === 0 && this.staticGrid[y][x+2] === 0 && this.staticGrid[y+1][x+2] === 0) {
                 gridRotateCheck[y+1][x] = 5;
                 gridRotateCheck[y][x+2] = 5;
@@ -756,14 +781,9 @@ class Tetris {
                 gridRotateCheck[y][x+1] = 0;
                 gridRotateCheck[y+2][x+1] = 0;
                 this.state = 3;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 3) {
+            else if(this.state === 3) {
               if(y < this.gridHeight - 2 && x > 0 && this.staticGrid[y][x-1] === 0 && this.staticGrid[y+2][x] === 0 && this.staticGrid[y+2][x-1] === 0) {
                 gridRotateCheck[y][x-1] = 5;
                 gridRotateCheck[y+2][x] = 5;
@@ -773,14 +793,9 @@ class Tetris {
                 gridRotateCheck[y+1][x] = 0;
                 gridRotateCheck[y+1][x-2] = 0;
                 this.state = 4;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 4) {
+            else if(this.state === 4) {
               if(y < this.gridHeight - 2 && x > 0 && x < this.gridWidth - 1 && this.staticGrid[y+1][x+1] === 0 && this.staticGrid[y+1][x-1] === 0 && this.staticGrid[y+2][x-1] === 0) {
                 gridRotateCheck[y+1][x+1] = 5;
                 gridRotateCheck[y+1][x-1] = 5;
@@ -790,13 +805,11 @@ class Tetris {
                 gridRotateCheck[y+2][x] = 0;
                 gridRotateCheck[y+2][x+1] = 0;
                 this.state = 1;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
+            this.droppingGrid = gridRotateCheck;
+            this.ghostGrid = this.droppingGrid;
+            return;
           }
         }
       }
@@ -815,14 +828,9 @@ class Tetris {
                 gridRotateCheck[y][x+1] = 0;
                 gridRotateCheck[y+1][x-1] = 0;
                 this.state = 2;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 2) {
+            else if(this.state === 2) {
               if(y < this.gridHeight - 2 && x > 0 && this.staticGrid[y+2][x] === 0 && this.staticGrid[y+2][x-1] === 0) {
                 gridRotateCheck[y+2][x] = 6;
                 gridRotateCheck[y+2][x-1] = 6;
@@ -830,14 +838,9 @@ class Tetris {
                 gridRotateCheck[y][x] = 0;
                 gridRotateCheck[y+2][x+1] = 0;
                 this.state = 3;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 3) {
+            else if(this.state === 3) {
               if(y > 0 && x > 0 && this.staticGrid[y-1][x-1] === 0 && this.staticGrid[y][x-1] === 0) {
                 gridRotateCheck[y-1][x-1] = 6;
                 gridRotateCheck[y][x-1] = 6;
@@ -845,14 +848,9 @@ class Tetris {
                 gridRotateCheck[y+1][x-1] = 0;
                 gridRotateCheck[y][x+1] = 0;
                 this.state = 4;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 4) {
+            else if(this.state === 4) {
               if(x < this.gridWidth - 2 && this.staticGrid[y][x+1] === 0 && this.staticGrid[y][x+2] === 0) {
                 gridRotateCheck[y][x+1] = 6;
                 gridRotateCheck[y][x+2] = 6;
@@ -860,13 +858,11 @@ class Tetris {
                 gridRotateCheck[y][x] = 0;
                 gridRotateCheck[y+2][x+1] = 0;
                 this.state = 1;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
+            this.droppingGrid = gridRotateCheck;
+            this.ghostGrid = this.droppingGrid;
+            return;
           }
         }
       }
@@ -885,14 +881,9 @@ class Tetris {
                 gridRotateCheck[y][x] = 0;
                 gridRotateCheck[y][x+1] = 0;
                 this.state = 2;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 2) {
+            else if(this.state === 2) {
               if(y < this.gridHeight - 2 && x < this.gridWidth - 2 && this.staticGrid[y+1][x-2] === 0 && this.staticGrid[y+2][x] === 0) {
                 gridRotateCheck[y+1][x-2] = 7;
                 gridRotateCheck[y+2][x] = 7;
@@ -900,14 +891,9 @@ class Tetris {
                 gridRotateCheck[y][x] = 0;
                 gridRotateCheck[y+1][x] = 0;
                 this.state = 3;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 3) {
+            else if(this.state === 3) {
               if(y < this.gridHeight - 1 && y > 0 && x < this.gridWidth - 1 && this.staticGrid[y-1][x+1] === 0 && this.staticGrid[y+1][x] === 0) {
                 gridRotateCheck[y-1][x+1] = 7;
                 gridRotateCheck[y+1][x] = 7;
@@ -915,14 +901,9 @@ class Tetris {
                 gridRotateCheck[y+1][x+2] = 0;
                 gridRotateCheck[y+1][x+1] = 0;
                 this.state = 4;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
-            if(this.state === 4) {
+            else if(this.state === 4) {
               if(y < this.gridHeight - 1 && x < this.gridWidth - 1 && x > 0 && this.staticGrid[y][x-1] === 0 && this.staticGrid[y+1][x+1] === 0) {
                 gridRotateCheck[y][x-1] = 7;
                 gridRotateCheck[y+1][x+1] = 7;
@@ -930,19 +911,15 @@ class Tetris {
                 gridRotateCheck[y+1][x-1] = 0;
                 gridRotateCheck[y+2][x-1] = 0;
                 this.state = 1;
-                this.droppingGrid = gridRotateCheck;
-                return;
-              }
-              else {
-                return;
               }
             }
+            this.droppingGrid = gridRotateCheck;
+            this.ghostGrid = this.droppingGrid;
+            return;
           }
         }
       }
     }
-
-    this.droppingGrid = gridRotateCheck;
   }
 
   loseCheck() {

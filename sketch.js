@@ -26,6 +26,7 @@ function draw() {
     }
     tetrisOne.lock();
     tetrisOne.softDrop();
+    tetrisOne.displayUpNext();
   }
   else {
     tetrisOne.loseScreen();
@@ -83,6 +84,7 @@ class Tetris {
     this.staticGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.ghostGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
+    this.upNextGrid = createEmptyGrid(3, 14);
     this.state = 1;
     if(height / this.gridHeight <= width/12) {
       this.cellSize = height / this.gridHeight;
@@ -102,16 +104,20 @@ class Tetris {
     this.stuck = false;
     this.softDropping = false;
     this.cellColor = color(255, 255, 255);
+    this.upNextCellColor = color(255, 255, 255);
     this.blockArray = [];
+    this.blockArrayRandomized = [];
   }
 
   blockSpawner() {
     //chooses block
-    if(this.blockArray.length === 0) {
+    if(this.blockArrayRandomized.length < 4) {
       this.blockArray = [1, 2, 3, 4, 5, 6, 7];
+      for(let i = 0; i < 7; i++) {
+        this.blockArrayRandomized.push(this.blockArray.splice(int(random(0, this.blockArray.length)), 1));
+      }
     }
-    this.block = this.blockArray.splice(int(random(0, this.blockArray.length)), 1);
-    this.block = this.block[0];
+    this.block = this.blockArrayRandomized.shift()[0];
 
     //places chosen block into the grid
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
@@ -153,6 +159,10 @@ class Tetris {
       this.droppingGrid[0][5] = 4;
       this.droppingGrid[0][6] = 4;
       this.droppingGrid[1][6] = 4;
+      this.ghostGrid[0][4] = 4;
+      this.ghostGrid[0][5] = 4;
+      this.ghostGrid[0][6] = 4;
+      this.ghostGrid[1][6] = 4;
       this.state = 1;
     }
     else if(this.block === 5) { //L block
@@ -187,6 +197,87 @@ class Tetris {
       this.ghostGrid[1][5] = 7;
       this.ghostGrid[1][6] = 7;
       this.state = 1;
+    }
+  }
+
+  displayUpNext() {
+    this.upNextGrid = createEmptyGrid(3, 14);
+    for(let i = 0; i < 3; i++) {
+      console.log(this.blockArrayRandomized[i]);
+      if(this.blockArrayRandomized[i][0] === 1) { //T block
+        this.upNextGrid[i*5][0] = 1;
+        this.upNextGrid[i*5][1] = 1;
+        this.upNextGrid[i*5][2] = 1;
+        this.upNextGrid[i*5 + 1][1] = 1;
+      }
+      else if(this.blockArrayRandomized[i][0] === 2) { //O block
+        this.upNextGrid[i*5][0] = 2;
+        this.upNextGrid[i*5][1] = 2;
+        this.upNextGrid[i*5 + 1][0] = 2;
+        this.upNextGrid[i*5 + 1][1] = 2;
+      }
+      else if(this.blockArrayRandomized[i][0] === 3) { //I block
+        this.upNextGrid[i*5][1] = 3;
+        this.upNextGrid[i*5 + 1][1] = 3;
+        this.upNextGrid[i*5 + 2][1] = 3;
+        this.upNextGrid[i*5 + 3][1] = 3;
+      }
+      else if(this.blockArrayRandomized[i][0] === 4) { //J block
+        this.upNextGrid[i*5][0] = 4;
+        this.upNextGrid[i*5][1] = 4;
+        this.upNextGrid[i*5][2] = 4;
+        this.upNextGrid[i*5 + 1][2] = 4;
+      }
+      else if(this.blockArrayRandomized[i][0] === 5) { //L block
+        this.upNextGrid[i*5][0] = 5;
+        this.upNextGrid[i*5][1] = 5;
+        this.upNextGrid[i*5][2] = 5;
+        this.upNextGrid[i*5 + 1][0] = 5;
+      }
+      else if(this.blockArrayRandomized[i][0] === 6) { //S block
+        this.upNextGrid[i*5][1] = 6;
+        this.upNextGrid[i*5][2] = 6;
+        this.upNextGrid[i*5 + 1][1] = 6;
+        this.upNextGrid[i*5 + 1][0] = 6;
+      }
+      else if(this.blockArrayRandomized[i][0] === 7) { //S block
+        this.upNextGrid[i*5][0] = 7;
+        this.upNextGrid[i*5][1] = 7;
+        this.upNextGrid[i*5 + 1][1] = 7;
+        this.upNextGrid[i*5 + 1][2] = 7;
+      }
+    }
+    textAlign(LEFT, TOP);
+    text("Up Next:", width/2 + this.cellSize * 5.5, this.cellSize * 5);
+    for(let y = 0; y < this.upNextGrid.length; y++) {
+      for(let x = 0; x < this.upNextGrid[y].length; x++) {    
+        if(this.upNextGrid[y][x] === 1) {
+          this.upNextCellColor = color(128, 0, 128);
+        }
+        else if(this.upNextGrid[y][x] === 2) {
+          this.upNextCellColor = color(255, 255, 0);
+        }
+        else if(this.upNextGrid[y][x] === 3) {
+          this.upNextCellColor = color(0, 255, 255);
+        }
+        else if(this.upNextGrid[y][x] === 4) {
+          this.upNextCellColor = color(0, 0, 255);
+        }
+        else if(this.upNextGrid[y][x] === 5) {
+          this.upNextCellColor = color(255, 127, 0);
+        }
+        else if(this.upNextGrid[y][x] === 6) {
+          this.upNextCellColor = color(0, 255, 0);
+        }
+        else if(this.upNextGrid[y][x] === 7) {
+          this.upNextCellColor = color(255, 0, 0);
+        }
+        else if(this.upNextGrid[y][x] === 0) {
+          this.upNextCellColor = color(127, 127, 127);
+        }
+        fill(this.upNextCellColor);
+        rect(x * this.cellSize + width/2 + this.cellSize * 7, y * this.cellSize + this.cellSize * 7, this.cellSize, this.cellSize);
+      }
     }
   }
 

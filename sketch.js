@@ -17,7 +17,9 @@ function draw() {
   background(220);
   tetrisOne.drawGrid();
   tetrisOne.displayScore();
-  if(!tetrisOne.lose) {
+  tetrisOne.displayUpNext();
+  tetrisOne.displayHold();
+  if(!tetrisOne.lose && !tetrisOne.paused) {
     if(frameCount % tetrisOne.frames === 0) {
       tetrisOne.gridFall();
     }
@@ -26,10 +28,13 @@ function draw() {
     }
     tetrisOne.lock();
     tetrisOne.softDrop();
-    tetrisOne.displayUpNext();
+    tetrisOne.pauseButton();
+  }
+  else if(tetrisOne.lose) {
+    tetrisOne.loseScreen();
   }
   else {
-    tetrisOne.loseScreen();
+    tetrisOne.pauseScreen();
   }
 }
 
@@ -65,6 +70,14 @@ function keyPressed() {
   if(keyCode === 32) {
     tetrisOne.hardDrop();
   }
+
+  if(keyCode === 67) {
+    tetrisOne.hold();
+  }
+
+  if(keyCode === 27) {
+    tetrisOne.paused = !tetrisOne.paused;
+  }
 }
 
 function mousePressed() {
@@ -72,6 +85,11 @@ function mousePressed() {
   if(tetrisOne.lose) {
     if(mouseX >= width/2 - tetrisOne.cellSize * 4.5 && mouseX <= width/2 + tetrisOne.cellSize * 4.5 && mouseY >= height * 3/4 - tetrisOne.cellSize * 3/2 && mouseY <= height * 3/4 + tetrisOne.cellSize * 3/2) {
       setup();
+    }
+  }
+  if(tetrisOne.paused) {
+    if(dist(mouseX, mouseY, width/2, height/2) <= tetrisOne.cellSize * 2.5) {
+      tetrisOne.paused = false;
     }
   }
 }
@@ -84,7 +102,8 @@ class Tetris {
     this.staticGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.ghostGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
-    this.upNextGrid = createEmptyGrid(3, 14);
+    this.upNextGrid = createEmptyGrid(4, 8);
+    this.holdGrid = createEmptyGrid(4, 2);
     this.state = 1;
     if(height / this.gridHeight <= width/12) {
       this.cellSize = height / this.gridHeight;
@@ -93,7 +112,7 @@ class Tetris {
       this.cellSize = width / 14;
     }
     this.lose = false;
-    this.resetColor = color(220);
+    this.buttonColor = color(220);
     this.level = 1;
     this.frames = 43;
     this.linesCleared = 0;
@@ -104,21 +123,59 @@ class Tetris {
     this.stuck = false;
     this.softDropping = false;
     this.cellColor = color(255, 255, 255);
-    this.upNextCellColor = color(255, 255, 255);
     this.blockArray = [];
     this.blockArrayRandomized = [];
+    this.holdMap = new Map();
+    this.alreadyHeld = false;
+    this.paused = true;
   }
 
-  blockSpawner() {
-    //chooses block
-    if(this.blockArrayRandomized.length < 4) {
-      this.blockArray = [1, 2, 3, 4, 5, 6, 7];
-      for(let i = 0; i < 7; i++) {
-        this.blockArrayRandomized.push(this.blockArray.splice(int(random(0, this.blockArray.length)), 1));
-      }
+  pauseScreen() {
+    rectMode(CENTER);
+    fill(this.buttonColor);
+    rect(width/2, height/2, this.cellSize * 5, this.cellSize * 5, this.cellSize);
+    fill(0);
+    rect(width/2 - this.cellSize*0.75, height/2, this.cellSize*0.75, this.cellSize * 2.5);
+    rect(width/2 + this.cellSize*0.75, height/2, this.cellSize*0.75, this.cellSize * 2.5);
+    rectMode(CORNER);
+    if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
+      this.buttonColor = color(220);
     }
-    this.block = this.blockArrayRandomized.shift()[0];
+    else {
+      this.buttonColor = color(180);
+    }
+  }
 
+  pauseButton() {
+    rectMode(CENTER);
+    fill(this.buttonColor);
+    rect(width - this.cellSize * 2, height/2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
+    fill(0);
+    rect(width - this.cellSize * 2 - this.cellSize*0.3, height/2, this.cellSize*0.3, this.cellSize * 0.6);
+    rect(width - this.cellSize * 2 + this.cellSize*0.3, height/2, this.cellSize*0.3, this.cellSize * 0.6);
+    rectMode(CORNER);
+    if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+  }
+
+  blockSpawner(blockToSpawn) {
+    if(blockToSpawn === undefined) {
+      //chooses block
+      if(this.blockArrayRandomized.length < 4) {
+        this.blockArray = [1, 2, 3, 4, 5, 6, 7];
+        for(let i = 0; i < 7; i++) {
+          this.blockArrayRandomized.push(this.blockArray.splice(int(random(0, this.blockArray.length)), 1));
+        }
+      }
+      this.block = this.blockArrayRandomized.shift()[0];
+    }
+    else {
+      this.block = blockToSpawn;
+    }
     //places chosen block into the grid
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
     this.ghostGrid = createEmptyGrid(this.gridWidth, this. gridHeight);
@@ -198,53 +255,53 @@ class Tetris {
       this.ghostGrid[1][6] = 7;
       this.state = 1;
     }
+    this.alreadyHeld = false;
   }
 
   displayUpNext() {
-    this.upNextGrid = createEmptyGrid(3, 14);
+    this.upNextGrid = createEmptyGrid(4, 8);
     for(let i = 0; i < 3; i++) {
-      console.log(this.blockArrayRandomized[i]);
       if(this.blockArrayRandomized[i][0] === 1) { //T block
-        this.upNextGrid[i*5][0] = 1;
-        this.upNextGrid[i*5][1] = 1;
-        this.upNextGrid[i*5][2] = 1;
-        this.upNextGrid[i*5 + 1][1] = 1;
+        this.upNextGrid[i*3][0] = 1;
+        this.upNextGrid[i*3][1] = 1;
+        this.upNextGrid[i*3][2] = 1;
+        this.upNextGrid[i*3 + 1][1] = 1;
       }
       else if(this.blockArrayRandomized[i][0] === 2) { //O block
-        this.upNextGrid[i*5][0] = 2;
-        this.upNextGrid[i*5][1] = 2;
-        this.upNextGrid[i*5 + 1][0] = 2;
-        this.upNextGrid[i*5 + 1][1] = 2;
+        this.upNextGrid[i*3][0] = 2;
+        this.upNextGrid[i*3][1] = 2;
+        this.upNextGrid[i*3 + 1][0] = 2;
+        this.upNextGrid[i*3 + 1][1] = 2;
       }
       else if(this.blockArrayRandomized[i][0] === 3) { //I block
-        this.upNextGrid[i*5][1] = 3;
-        this.upNextGrid[i*5 + 1][1] = 3;
-        this.upNextGrid[i*5 + 2][1] = 3;
-        this.upNextGrid[i*5 + 3][1] = 3;
+        this.upNextGrid[i*3][0] = 3;
+        this.upNextGrid[i*3][1] = 3;
+        this.upNextGrid[i*3][2] = 3;
+        this.upNextGrid[i*3][3] = 3;
       }
       else if(this.blockArrayRandomized[i][0] === 4) { //J block
-        this.upNextGrid[i*5][0] = 4;
-        this.upNextGrid[i*5][1] = 4;
-        this.upNextGrid[i*5][2] = 4;
-        this.upNextGrid[i*5 + 1][2] = 4;
+        this.upNextGrid[i*3][0] = 4;
+        this.upNextGrid[i*3][1] = 4;
+        this.upNextGrid[i*3][2] = 4;
+        this.upNextGrid[i*3 + 1][2] = 4;
       }
       else if(this.blockArrayRandomized[i][0] === 5) { //L block
-        this.upNextGrid[i*5][0] = 5;
-        this.upNextGrid[i*5][1] = 5;
-        this.upNextGrid[i*5][2] = 5;
-        this.upNextGrid[i*5 + 1][0] = 5;
+        this.upNextGrid[i*3][0] = 5;
+        this.upNextGrid[i*3][1] = 5;
+        this.upNextGrid[i*3][2] = 5;
+        this.upNextGrid[i*3 + 1][0] = 5;
       }
       else if(this.blockArrayRandomized[i][0] === 6) { //S block
-        this.upNextGrid[i*5][1] = 6;
-        this.upNextGrid[i*5][2] = 6;
-        this.upNextGrid[i*5 + 1][1] = 6;
-        this.upNextGrid[i*5 + 1][0] = 6;
+        this.upNextGrid[i*3][1] = 6;
+        this.upNextGrid[i*3][2] = 6;
+        this.upNextGrid[i*3 + 1][1] = 6;
+        this.upNextGrid[i*3 + 1][0] = 6;
       }
       else if(this.blockArrayRandomized[i][0] === 7) { //S block
-        this.upNextGrid[i*5][0] = 7;
-        this.upNextGrid[i*5][1] = 7;
-        this.upNextGrid[i*5 + 1][1] = 7;
-        this.upNextGrid[i*5 + 1][2] = 7;
+        this.upNextGrid[i*3][0] = 7;
+        this.upNextGrid[i*3][1] = 7;
+        this.upNextGrid[i*3 + 1][1] = 7;
+        this.upNextGrid[i*3 + 1][2] = 7;
       }
     }
     textAlign(LEFT, TOP);
@@ -252,31 +309,123 @@ class Tetris {
     for(let y = 0; y < this.upNextGrid.length; y++) {
       for(let x = 0; x < this.upNextGrid[y].length; x++) {    
         if(this.upNextGrid[y][x] === 1) {
-          this.upNextCellColor = color(128, 0, 128);
+          this.cellColor = color(128, 0, 128);
         }
         else if(this.upNextGrid[y][x] === 2) {
-          this.upNextCellColor = color(255, 255, 0);
+          this.cellColor = color(255, 255, 0);
         }
         else if(this.upNextGrid[y][x] === 3) {
-          this.upNextCellColor = color(0, 255, 255);
+          this.cellColor = color(0, 255, 255);
         }
         else if(this.upNextGrid[y][x] === 4) {
-          this.upNextCellColor = color(0, 0, 255);
+          this.cellColor = color(0, 0, 255);
         }
         else if(this.upNextGrid[y][x] === 5) {
-          this.upNextCellColor = color(255, 127, 0);
+          this.cellColor = color(255, 127, 0);
         }
         else if(this.upNextGrid[y][x] === 6) {
-          this.upNextCellColor = color(0, 255, 0);
+          this.cellColor = color(0, 255, 0);
         }
         else if(this.upNextGrid[y][x] === 7) {
-          this.upNextCellColor = color(255, 0, 0);
+          this.cellColor = color(255, 0, 0);
         }
-        else if(this.upNextGrid[y][x] === 0) {
-          this.upNextCellColor = color(127, 127, 127);
+        if(this.upNextGrid[y][x] !== 0) {
+          fill(this.cellColor);
+          rect(x * this.cellSize + width/2 + this.cellSize * 7, y * this.cellSize + this.cellSize * 7, this.cellSize, this.cellSize);
         }
-        fill(this.upNextCellColor);
-        rect(x * this.cellSize + width/2 + this.cellSize * 7, y * this.cellSize + this.cellSize * 7, this.cellSize, this.cellSize);
+      }
+    }
+  }
+
+  hold() {
+    if(this.alreadyHeld === false) {
+      if(this.holdMap.has("heldBlock")) {
+        let tempHoldBlock = this.block;
+        this.blockSpawner(this.holdMap.get("heldBlock"));
+        this.holdMap.set("heldBlock", tempHoldBlock);
+      }
+      else {
+        this.holdMap.set("heldBlock", this.block);
+        this.blockSpawner();
+      }
+      this.alreadyHeld = true;
+    }
+  }
+
+  displayHold() {
+    this.holdGrid = createEmptyGrid(4, 2);
+    if(this.holdMap.get("heldBlock") === 1) { //T block
+      this.holdGrid[0][0] = 1;
+      this.holdGrid[0][1] = 1;
+      this.holdGrid[0][2] = 1;
+      this.holdGrid[1][1] = 1;
+    }
+    else if(this.holdMap.get("heldBlock") === 2) { //O block
+      this.holdGrid[0][0] = 2;
+      this.holdGrid[0][1] = 2;
+      this.holdGrid[1][0] = 2;
+      this.holdGrid[1][1] = 2;
+    }
+    else if(this.holdMap.get("heldBlock") === 3) { //I block
+      this.holdGrid[0][0] = 3;
+      this.holdGrid[0][1] = 3;
+      this.holdGrid[0][2] = 3;
+      this.holdGrid[0][3] = 3;
+    }
+    else if(this.holdMap.get("heldBlock") === 4) { //J block
+      this.holdGrid[0][0] = 4;
+      this.holdGrid[0][1] = 4;
+      this.holdGrid[0][2] = 4;
+      this.holdGrid[1][2] = 4;
+    }
+    else if(this.holdMap.get("heldBlock") === 5) { //L block
+      this.holdGrid[0][0] = 5;
+      this.holdGrid[0][1] = 5;
+      this.holdGrid[0][2] = 5;
+      this.holdGrid[1][0] = 5;
+    }
+    else if(this.holdMap.get("heldBlock") === 6) { //S block
+      this.holdGrid[0][1] = 6;
+      this.holdGrid[0][2] = 6;
+      this.holdGrid[1][1] = 6;
+      this.holdGrid[1][0] = 6;
+    }
+    else if(this.holdMap.get("heldBlock") === 7) { //S block
+      this.holdGrid[0][0] = 7;
+      this.holdGrid[0][1] = 7;
+      this.holdGrid[1][1] = 7;
+      this.holdGrid[1][2] = 7;
+    }
+    fill("red");
+    textAlign(RIGHT, TOP);
+    text("Up Next:", width/2 - this.cellSize * 5.5, this.cellSize * 5);
+    for(let y = 0; y < this.holdGrid.length; y++) {
+      for(let x = 0; x < this.holdGrid[y].length; x++) {    
+        if(this.holdGrid[y][x] === 1) {
+          this.cellColor = color(128, 0, 128);
+        }
+        else if(this.holdGrid[y][x] === 2) {
+          this.cellColor = color(255, 255, 0);
+        }
+        else if(this.holdGrid[y][x] === 3) {
+          this.cellColor = color(0, 255, 255);
+        }
+        else if(this.holdGrid[y][x] === 4) {
+          this.cellColor = color(0, 0, 255);
+        }
+        else if(this.holdGrid[y][x] === 5) {
+          this.cellColor = color(255, 127, 0);
+        }
+        else if(this.holdGrid[y][x] === 6) {
+          this.cellColor = color(0, 255, 0);
+        }
+        else if(this.holdGrid[y][x] === 7) {
+          this.cellColor = color(255, 0, 0);
+        }
+        if(this.holdGrid[y][x] !== 0) {
+          fill(this.cellColor);
+          rect(x * this.cellSize + width/2 - this.cellSize * 10, y * this.cellSize + this.cellSize * 7, this.cellSize, this.cellSize);
+        }
       }
     }
   }
@@ -498,7 +647,7 @@ class Tetris {
     //reset button
     stroke("black");
     rectMode(CENTER);
-    fill(this.resetColor);
+    fill(this.buttonColor);
     rect(width/2, height * 3/4, this.cellSize * 9, this.cellSize * 3);
     fill("black");
     text("R E S E T", width/2, height * 3/4 + 10);
@@ -507,10 +656,10 @@ class Tetris {
 
     //hover the button
     if(mouseX >= width/2 - this.cellSize * 4.5 && mouseX <= width/2 + this.cellSize * 4.5 && mouseY >= height * 3/4 - this.cellSize * 3/2 && mouseY <= height * 3/4 + this.cellSize * 3/2) {
-      this.resetColor = color(220);
+      this.buttonColor = color(220);
     }
     else {
-      this.resetColor = color(180);
+      this.buttonColor = color(180);
     }
   }
 

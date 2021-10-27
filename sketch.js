@@ -15,26 +15,31 @@ function setup() {
 
 function draw() {
   background(220);
-  tetrisOne.drawGrid();
-  tetrisOne.displayScore();
-  tetrisOne.displayUpNext();
-  tetrisOne.displayHold();
-  if(!tetrisOne.lose && !tetrisOne.paused) {
-    if(frameCount % tetrisOne.frames === 0) {
-      tetrisOne.gridFall();
+  if(!tetrisOne.menu) {
+    tetrisOne.drawGrid();
+    tetrisOne.displayScore();
+    tetrisOne.displayUpNext();
+    tetrisOne.displayHold();
+    if(!tetrisOne.lose && !tetrisOne.paused) {
+      if(frameCount % tetrisOne.frames === 0) {
+        tetrisOne.gridFall();
+      }
+      for(let i = 0; i < 60; i++) {
+        tetrisOne.ghostFall();
+      }
+      tetrisOne.lock();
+      tetrisOne.softDrop();
+      tetrisOne.pauseButton();
     }
-    for(let i = 0; i < 60; i++) {
-      tetrisOne.ghostFall();
+    else if(tetrisOne.lose) {
+      tetrisOne.loseScreen();
     }
-    tetrisOne.lock();
-    tetrisOne.softDrop();
-    tetrisOne.pauseButton();
-  }
-  else if(tetrisOne.lose) {
-    tetrisOne.loseScreen();
+    else {
+      tetrisOne.pauseScreen();
+    }
   }
   else {
-    tetrisOne.pauseScreen();
+    tetrisOne.menuScreen();
   }
 }
 
@@ -92,6 +97,16 @@ function mousePressed() {
       tetrisOne.paused = false;
     }
   }
+  else {
+    if(dist(mouseX, mouseY, width - tetrisOne.cellSize * 2, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) {
+      tetrisOne.paused = true;
+    }
+  }
+  if(tetrisOne.menu) {
+    if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) {
+      tetrisOne.menu = false;
+    }
+  }
 }
 
 class Tetris {
@@ -127,7 +142,32 @@ class Tetris {
     this.blockArrayRandomized = [];
     this.holdMap = new Map();
     this.alreadyHeld = false;
-    this.paused = true;
+    this.paused = false;
+    this.menu = true;
+  }
+
+  menuScreen() {
+    fill(127, 127, 127);
+    rectMode(CENTER);
+    rect(width/2, height/2, this.cellSize*(this.gridWidth + 5) , this.cellSize*this.gridHeight);
+
+    fill("red");
+    textAlign(CENTER, CENTER);
+    textSize(this.cellSize * 3);
+    text("T E T R I S", width/2, this.cellSize * 7);
+
+    fill(this.buttonColor);
+    rect(width/2 - this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
+    fill(0);
+    triangle(width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 + this.cellSize*1.5, width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 - this.cellSize*1.5, width/2 - this.cellSize*3 + this.cellSize*1.75, height * 0.75);
+
+    rectMode(CORNER);
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
   }
 
   pauseScreen() {
@@ -149,12 +189,12 @@ class Tetris {
   pauseButton() {
     rectMode(CENTER);
     fill(this.buttonColor);
-    rect(width - this.cellSize * 2, height/2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
+    rect(width - this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
     fill(0);
-    rect(width - this.cellSize * 2 - this.cellSize*0.3, height/2, this.cellSize*0.3, this.cellSize * 0.6);
-    rect(width - this.cellSize * 2 + this.cellSize*0.3, height/2, this.cellSize*0.3, this.cellSize * 0.6);
+    rect(width - this.cellSize * 2 - this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);
+    rect(width - this.cellSize * 2 + this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);
     rectMode(CORNER);
-    if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
+    if(dist(mouseX, mouseY, width - this.cellSize * 2, this.cellSize * 2) <= this.cellSize) {
       this.buttonColor = color(220);
     }
     else {
@@ -355,16 +395,16 @@ class Tetris {
   displayHold() {
     this.holdGrid = createEmptyGrid(4, 2);
     if(this.holdMap.get("heldBlock") === 1) { //T block
-      this.holdGrid[0][0] = 1;
       this.holdGrid[0][1] = 1;
+      this.holdGrid[0][3] = 1;
       this.holdGrid[0][2] = 1;
-      this.holdGrid[1][1] = 1;
+      this.holdGrid[1][2] = 1;
     }
     else if(this.holdMap.get("heldBlock") === 2) { //O block
-      this.holdGrid[0][0] = 2;
       this.holdGrid[0][1] = 2;
-      this.holdGrid[1][0] = 2;
+      this.holdGrid[0][2] = 2;
       this.holdGrid[1][1] = 2;
+      this.holdGrid[1][2] = 2;
     }
     else if(this.holdMap.get("heldBlock") === 3) { //I block
       this.holdGrid[0][0] = 3;
@@ -373,32 +413,32 @@ class Tetris {
       this.holdGrid[0][3] = 3;
     }
     else if(this.holdMap.get("heldBlock") === 4) { //J block
-      this.holdGrid[0][0] = 4;
       this.holdGrid[0][1] = 4;
       this.holdGrid[0][2] = 4;
-      this.holdGrid[1][2] = 4;
+      this.holdGrid[0][3] = 4;
+      this.holdGrid[1][3] = 4;
     }
     else if(this.holdMap.get("heldBlock") === 5) { //L block
-      this.holdGrid[0][0] = 5;
       this.holdGrid[0][1] = 5;
       this.holdGrid[0][2] = 5;
-      this.holdGrid[1][0] = 5;
+      this.holdGrid[0][3] = 5;
+      this.holdGrid[1][1] = 5;
     }
     else if(this.holdMap.get("heldBlock") === 6) { //S block
-      this.holdGrid[0][1] = 6;
       this.holdGrid[0][2] = 6;
+      this.holdGrid[0][3] = 6;
+      this.holdGrid[1][2] = 6;
       this.holdGrid[1][1] = 6;
-      this.holdGrid[1][0] = 6;
     }
     else if(this.holdMap.get("heldBlock") === 7) { //S block
-      this.holdGrid[0][0] = 7;
       this.holdGrid[0][1] = 7;
-      this.holdGrid[1][1] = 7;
+      this.holdGrid[0][2] = 7;
       this.holdGrid[1][2] = 7;
+      this.holdGrid[1][3] = 7;
     }
     fill("red");
     textAlign(RIGHT, TOP);
-    text("Up Next:", width/2 - this.cellSize * 5.5, this.cellSize * 5);
+    text("Held:", width/2 - this.cellSize * 5.5, this.cellSize * 5);
     for(let y = 0; y < this.holdGrid.length; y++) {
       for(let x = 0; x < this.holdGrid[y].length; x++) {    
         if(this.holdGrid[y][x] === 1) {
@@ -424,7 +464,7 @@ class Tetris {
         }
         if(this.holdGrid[y][x] !== 0) {
           fill(this.cellColor);
-          rect(x * this.cellSize + width/2 - this.cellSize * 10, y * this.cellSize + this.cellSize * 7, this.cellSize, this.cellSize);
+          rect(x * this.cellSize + width/2 - this.cellSize * 9.5, y * this.cellSize + this.cellSize * 7, this.cellSize, this.cellSize);
         }
       }
     }

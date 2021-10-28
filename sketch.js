@@ -6,6 +6,11 @@
 // - describe what you did to take this project "above and beyond"
 
 let tetrisOne;
+let optionsIcon;
+
+function preload() {
+  optionsIcon = loadImage("assets/gearIcon.png");
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -127,7 +132,8 @@ class Tetris {
       this.cellSize = width / 14;
     }
     this.lose = false;
-    this.buttonColor = color(220);
+    this.playButtonColor = color(180);
+    this.optionsButtonColor = color(180);
     this.level = 1;
     this.frames = 43;
     this.linesCleared = 0;
@@ -156,39 +162,54 @@ class Tetris {
     textSize(this.cellSize * 3);
     text("T E T R I S", width/2, this.cellSize * 7);
 
-    fill(this.buttonColor);
+    fill(this.playButtonColor);
     rect(width/2 - this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
     fill(0);
     triangle(width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 + this.cellSize*1.5, width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 - this.cellSize*1.5, width/2 - this.cellSize*3 + this.cellSize*1.75, height * 0.75);
 
+    
+    fill(this.optionsButtonColor);
+    rect(width/2 + this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
+    imageMode(CENTER);
+    image(optionsIcon, width/2 + this.cellSize*3, height * 0.75);
+    
+
+
     rectMode(CORNER);
-    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) {
-      this.buttonColor = color(220);
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //play button
+      this.playButtonColor = color(220);
     }
     else {
-      this.buttonColor = color(180);
+      this.playButtonColor = color(180);
     }
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //options button
+      this.optionsButtonColor = color(220);
+    }
+    else {
+      this.optionsButtonColor = color(180);
+    }
+
   }
 
   pauseScreen() {
     rectMode(CENTER);
-    fill(this.buttonColor);
+    fill(this.playButtonColor);
     rect(width/2, height/2, this.cellSize * 5, this.cellSize * 5, this.cellSize);
     fill(0);
     rect(width/2 - this.cellSize*0.75, height/2, this.cellSize*0.75, this.cellSize * 2.5);
     rect(width/2 + this.cellSize*0.75, height/2, this.cellSize*0.75, this.cellSize * 2.5);
     rectMode(CORNER);
     if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
-      this.buttonColor = color(220);
+      this.playButtonColor = color(220);
     }
     else {
-      this.buttonColor = color(180);
+      this.playButtonColor = color(180);
     }
   }
 
   pauseButton() {
     rectMode(CENTER);
-    fill(this.buttonColor);
+    fill(this.playButtonColor);
     rect(width - this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
     fill(0);
     rect(width - this.cellSize * 2 - this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);

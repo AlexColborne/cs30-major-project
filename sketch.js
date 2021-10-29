@@ -6,21 +6,28 @@
 // - describe what you did to take this project "above and beyond"
 
 let tetrisOne;
-let optionsIcon;
+let optionsIcon, tetriminoClick, clearSound, bgSong;
+let bgMusicPlay, sfxPlay;
+
 
 function preload() {
   optionsIcon = loadImage("assets/gearIcon.png");
+
+  tetriminoClick = loadSound("assets/klick11.flac");
+  clearSound = loadSound("assets/flaunch.wav");
+  bgSong = loadSound("assets/australisfrontier.mp3");
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   tetrisOne = new Tetris();
   tetrisOne.blockSpawner();
+  bgSong.loop();
 }
 
 function draw() {
   background(220);
-  if(!tetrisOne.menu) {
+  if(!tetrisOne.menu && !tetrisOne.options) {
     tetrisOne.drawGrid();
     tetrisOne.displayScore();
     tetrisOne.displayUpNext();
@@ -43,8 +50,11 @@ function draw() {
       tetrisOne.pauseScreen();
     }
   }
-  else {
+  if(tetrisOne.menu === true) {
     tetrisOne.menuScreen();
+  }
+  else if(tetrisOne.options === true) {
+    tetrisOne.optionsMenu();
   }
 }
 
@@ -111,6 +121,16 @@ function mousePressed() {
     if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) {
       tetrisOne.menu = false;
     }
+    if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) {
+      tetrisOne.options = true;
+      tetrisOne.menu = false;
+    }
+  }
+  if(tetrisOne.options) {
+    if(dist(mouseX, mouseY, width / 2 + tetrisOne.cellSize * 6, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) {
+      tetrisOne.menu = true;
+      tetrisOne.options = false;
+    }
   }
 }
 
@@ -132,8 +152,7 @@ class Tetris {
       this.cellSize = width / 14;
     }
     this.lose = false;
-    this.playButtonColor = color(180);
-    this.optionsButtonColor = color(180);
+    this.buttonColor = color(180);
     this.level = 1;
     this.frames = 43;
     this.linesCleared = 0;
@@ -150,9 +169,11 @@ class Tetris {
     this.alreadyHeld = false;
     this.paused = false;
     this.menu = true;
+    this.options = false;
   }
 
   menuScreen() {
+    strokeWeight(2);
     fill(127, 127, 127);
     rectMode(CENTER);
     rect(width/2, height/2, this.cellSize*(this.gridWidth + 5) , this.cellSize*this.gridHeight);
@@ -162,65 +183,80 @@ class Tetris {
     textSize(this.cellSize * 3);
     text("T E T R I S", width/2, this.cellSize * 7);
 
-    fill(this.playButtonColor);
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //play button
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
     rect(width/2 - this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
     fill(0);
     triangle(width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 + this.cellSize*1.5, width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 - this.cellSize*1.5, width/2 - this.cellSize*3 + this.cellSize*1.75, height * 0.75);
 
-    
-    fill(this.optionsButtonColor);
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //options button
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
     rect(width/2 + this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
     imageMode(CENTER);
     image(optionsIcon, width/2 + this.cellSize*3, height * 0.75);
-    
+  }
 
+  optionsMenu() {
+    fill(127, 127, 127);
+    rectMode(CENTER);
+    rect(width/2, height/2, this.cellSize*(this.gridWidth + 5) , this.cellSize*this.gridHeight);
 
+    if(dist(mouseX, mouseY, width - width / 2 + this.cellSize * 6, this.cellSize * 2) <= this.cellSize) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    rectMode(CENTER);
+    fill(this.buttonColor);
+    rect(width / 2 + this.cellSize * 6, this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
+    fill(0);
+    textAlign(CENTER);
+    textSize(this.cellSize * 2);
+    text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
-    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //play button
-      this.playButtonColor = color(220);
-    }
-    else {
-      this.playButtonColor = color(180);
-    }
-    if(dist(mouseX, mouseY, width/2 + this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //options button
-      this.optionsButtonColor = color(220);
-    }
-    else {
-      this.optionsButtonColor = color(180);
-    }
-
   }
 
   pauseScreen() {
+    if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
     rectMode(CENTER);
-    fill(this.playButtonColor);
+    fill(this.buttonColor);
     rect(width/2, height/2, this.cellSize * 5, this.cellSize * 5, this.cellSize);
     fill(0);
     rect(width/2 - this.cellSize*0.75, height/2, this.cellSize*0.75, this.cellSize * 2.5);
     rect(width/2 + this.cellSize*0.75, height/2, this.cellSize*0.75, this.cellSize * 2.5);
     rectMode(CORNER);
-    if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
-      this.playButtonColor = color(220);
-    }
-    else {
-      this.playButtonColor = color(180);
-    }
   }
 
   pauseButton() {
-    rectMode(CENTER);
-    fill(this.playButtonColor);
-    rect(width - this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
-    fill(0);
-    rect(width - this.cellSize * 2 - this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);
-    rect(width - this.cellSize * 2 + this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);
-    rectMode(CORNER);
     if(dist(mouseX, mouseY, width - this.cellSize * 2, this.cellSize * 2) <= this.cellSize) {
       this.buttonColor = color(220);
     }
     else {
       this.buttonColor = color(180);
     }
+    rectMode(CENTER);
+    fill(this.buttonColor);
+    rect(width - this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
+    fill(0);
+    rect(width - this.cellSize * 2 - this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);
+    rect(width - this.cellSize * 2 + this.cellSize*0.3, this.cellSize * 2, this.cellSize*0.3, this.cellSize);
+    rectMode(CORNER);
   }
 
   blockSpawner(blockToSpawn) {
@@ -643,6 +679,7 @@ class Tetris {
           }
         }
       }
+      tetriminoClick.play();
       this.newLinesCleared = 0;
       this.clearLineCheck();
       this.stuck = false;
@@ -661,6 +698,7 @@ class Tetris {
         if(counter === 10) {
           this.clearLine(y);
           this.recordScore();
+          clearSound.play();
         }
       }
     }
@@ -706,6 +744,12 @@ class Tetris {
     text("You Cleared " + this.linesCleared + " Lines!", width/2, height / 2);
 
     //reset button
+    if(mouseX >= width/2 - this.cellSize * 4.5 && mouseX <= width/2 + this.cellSize * 4.5 && mouseY >= height * 3/4 - this.cellSize * 3/2 && mouseY <= height * 3/4 + this.cellSize * 3/2) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
     stroke("black");
     rectMode(CENTER);
     fill(this.buttonColor);
@@ -714,14 +758,6 @@ class Tetris {
     text("R E S E T", width/2, height * 3/4 + 10);
     rectMode(CORNER);
     strokeWeight(2);
-
-    //hover the button
-    if(mouseX >= width/2 - this.cellSize * 4.5 && mouseX <= width/2 + this.cellSize * 4.5 && mouseY >= height * 3/4 - this.cellSize * 3/2 && mouseY <= height * 3/4 + this.cellSize * 3/2) {
-      this.buttonColor = color(220);
-    }
-    else {
-      this.buttonColor = color(180);
-    }
   }
 
   clearLine(completedY) {

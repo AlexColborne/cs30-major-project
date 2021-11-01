@@ -11,31 +11,41 @@ let bgMusicPlay, sfxPlay;
 
 
 function preload() {
+  //load gear icon for options button
   optionsIcon = loadImage("assets/gearIcon.png");
 
+  //load sounds used in game
   tetriminoClick = loadSound("assets/klick11.flac");
   clearSound = loadSound("assets/flaunch.wav");
   bgSong = loadSound("assets/australisfrontier.mp3");
 }
 
 function setup() {
+  //creates window, loads instance of tetris, and loops song
   createCanvas(windowWidth, windowHeight);
-  tetrisOne = new Tetris();
+  tetrisOne = new Tetris(1);
   tetrisOne.blockSpawner();
   bgSong.loop();
 }
 
+function reset() {
+  tetrisOne = new Tetris(tetrisOne.masterVolume);
+  tetrisOne.blockSpawner();
+}
+
 function draw() {
   background(220);
-  if(!tetrisOne.menu && !tetrisOne.options) {
+  if(!tetrisOne.menu && !tetrisOne.options) { //if in game, show grid, score, and ui items
     tetrisOne.drawGrid();
     tetrisOne.displayScore();
     tetrisOne.displayUpNext();
     tetrisOne.displayHold();
-    if(!tetrisOne.lose && !tetrisOne.paused) {
+    if(!tetrisOne.lose && !tetrisOne.paused) { //if in game and not paused, run the game
+      //drops block at interval decided by how far into the game the player is
       if(frameCount % tetrisOne.frames === 0) {
         tetrisOne.gridFall();
       }
+      //constantly dropping ghost block
       for(let i = 0; i < 60; i++) {
         tetrisOne.ghostFall();
       }
@@ -43,17 +53,17 @@ function draw() {
       tetrisOne.softDrop();
       tetrisOne.pauseButton();
     }
-    else if(tetrisOne.lose) {
+    else if(tetrisOne.lose) { //show loss screen after losing
       tetrisOne.loseScreen();
     }
-    else {
+    else { //shows pause screen when paused
       tetrisOne.pauseScreen();
     }
   }
-  if(tetrisOne.menu === true) {
+  if(tetrisOne.menu === true) { //shows main menu
     tetrisOne.menuScreen();
   }
-  else if(tetrisOne.options === true) {
+  else if(tetrisOne.options === true) { //shows options menu
     tetrisOne.optionsMenu();
   }
 }
@@ -71,71 +81,84 @@ function createEmptyGrid(cellsWide, cellsHigh) {
 }
 
 function keyPressed() {
+  //movement left and right
   if(keyCode === LEFT_ARROW) {
     tetrisOne.movement(-1);
   }
-
   if(keyCode === RIGHT_ARROW) {
     tetrisOne.movement(1);
   }
 
+  //rotation of block
   if(keyCode === UP_ARROW) {
     tetrisOne.rotations();
   }
 
+  //drops the block faster but still allows lock delay
   if(keyCode === DOWN_ARROW) {
     tetrisOne.softDropping = true;
   }
 
-  if(keyCode === 32) {
+  //drops the block instantly with no lock delay
+  if(keyCode === 32) { //space
     tetrisOne.hardDrop();
   }
 
-  if(keyCode === 67) {
+  //holds block for later use
+  if(keyCode === 67) { //c
     tetrisOne.hold();
   }
 
-  if(keyCode === 27) {
+  //pauses the game
+  if(keyCode === 27) { //esc
     tetrisOne.paused = !tetrisOne.paused;
   }
 }
 
 function mousePressed() {
-  //clicks the reset button
-  if(tetrisOne.lose) {
+  //clicking buttons
+  if(tetrisOne.lose) { //reset button
     if(mouseX >= width/2 - tetrisOne.cellSize * 4.5 && mouseX <= width/2 + tetrisOne.cellSize * 4.5 && mouseY >= height * 3/4 - tetrisOne.cellSize * 3/2 && mouseY <= height * 3/4 + tetrisOne.cellSize * 3/2) {
-      setup();
+      reset();
     }
   }
-  if(tetrisOne.paused) {
+  else if(tetrisOne.paused) { //unpause button
     if(dist(mouseX, mouseY, width/2, height/2) <= tetrisOne.cellSize * 2.5) {
       tetrisOne.paused = false;
     }
   }
-  else {
-    if(dist(mouseX, mouseY, width - tetrisOne.cellSize * 2, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) {
-      tetrisOne.paused = true;
-    }
-  }
-  if(tetrisOne.menu) {
-    if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) {
+  else if(tetrisOne.menu) { //buttons on main menu
+    if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) { //play button
       tetrisOne.menu = false;
     }
-    if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) {
+    if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) { //options button
       tetrisOne.options = true;
       tetrisOne.menu = false;
     }
   }
-  if(tetrisOne.options) {
-    if(dist(mouseX, mouseY, width / 2 + tetrisOne.cellSize * 6, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) {
+  else if(tetrisOne.options) { //buttons on options menu
+    if(dist(mouseX, mouseY, width / 2 + tetrisOne.cellSize * 6, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) { //return to main menu
       tetrisOne.menu = true;
       tetrisOne.options = false;
+    }
+    //increase master volume
+    else if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*5.75, height/4 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) { 
+      tetrisOne.volumeAdjuster(0, 1);
+    }
+    //decrease master volume
+    else if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*5.75, height/4 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) {
+      tetrisOne.volumeAdjuster(0, -1);
+    }
+  }
+  else { //pause button in-game
+    if(dist(mouseX, mouseY, width - tetrisOne.cellSize * 2, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) {
+      tetrisOne.paused = true;
     }
   }
 }
 
-class Tetris {
-  constructor() {
+class Tetris { //all data and behaviours needed to instantiate a game of Tetris
+  constructor(masterVolume) { //holds all variables needed for Tetris to be played
     this.gridHeight = 22;
     this.gridWidth = 10;
     this.block;
@@ -170,9 +193,10 @@ class Tetris {
     this.paused = false;
     this.menu = true;
     this.options = false;
+    this.masterVolume = masterVolume;
   }
 
-  menuScreen() {
+  menuScreen() { //shows main menu containing title, play button, options button, and instructions button
     strokeWeight(2);
     fill(127, 127, 127);
     rectMode(CENTER);
@@ -206,12 +230,12 @@ class Tetris {
     image(optionsIcon, width/2 + this.cellSize*3, height * 0.75);
   }
 
-  optionsMenu() {
+  optionsMenu() { //shows options menu containing volume adjustments
     fill(127, 127, 127);
     rectMode(CENTER);
     rect(width/2, height/2, this.cellSize*(this.gridWidth + 5) , this.cellSize*this.gridHeight);
 
-    if(dist(mouseX, mouseY, width - width / 2 + this.cellSize * 6, this.cellSize * 2) <= this.cellSize) {
+    if(dist(mouseX, mouseY, width - width / 2 + this.cellSize * 6, this.cellSize * 2) <= this.cellSize) { //return to menu button
       this.buttonColor = color(220);
     }
     else {
@@ -225,9 +249,62 @@ class Tetris {
     textSize(this.cellSize * 2);
     text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
+
+    fill("red");
+    text("Master Volume:", width/2, height/4);
+    rectMode(CORNER);
+    for(let i = 1; i < 11; i++) {
+      if(this.masterVolume * 10 < i) {
+        fill(160);
+      }
+      else {
+        fill(240);
+      }
+      rect(width/2 - 4.75*this.cellSize + i*this.cellSize - this.cellSize, height/4 + this.cellSize, this.cellSize / 2, this.cellSize*2);
+    }
+
+    //right arrow for master volume
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*5.75, height/4 + this.cellSize * 2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 + this.cellSize*5, height/4 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 + this.cellSize*5.75 - this.cellSize*0.45, height/4 + this.cellSize * 2 + this.cellSize*0.5, width/2 + this.cellSize*5.75 - this.cellSize*0.45, height/4 + this.cellSize * 2 - this.cellSize*0.5, width/2 + this.cellSize*5.75 + this.cellSize*0.58, height/4 + this.cellSize * 2);
+
+    //left arrow for master volume
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*5.75, height/4 + this.cellSize * 2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 - this.cellSize*6.5, height/4 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 - this.cellSize*5.75 + this.cellSize*0.45, height/4 + this.cellSize * 2 + this.cellSize*0.5, width/2 - this.cellSize*5.75 + this.cellSize*0.45, height/4 + this.cellSize * 2 - this.cellSize*0.5, width/2 - this.cellSize*5.75 - this.cellSize*0.58, height/4 + this.cellSize * 2);
   }
 
-  pauseScreen() {
+  volumeAdjuster(volumeType, directionOfChange) {
+    let currentType = null;
+    if(volumeType === 0) {
+      currentType = this.masterVolume;
+    }
+
+    if(currentType + directionOfChange*0.1 >= 0 && currentType + directionOfChange*0.1 <= 1) {
+      currentType += 0.1*directionOfChange;
+    }
+
+    if(volumeType === 0) {
+      this.masterVolume = currentType;
+      outputVolume(this.masterVolume);
+    }
+  }
+
+  pauseScreen() { //pauses the game, preventing blocks from falling
     if(dist(mouseX, mouseY, width/2, height/2) <= this.cellSize * 2.5) {
       this.buttonColor = color(220);
     }
@@ -243,7 +320,7 @@ class Tetris {
     rectMode(CORNER);
   }
 
-  pauseButton() {
+  pauseButton() { //shows pause button in top right corner
     if(dist(mouseX, mouseY, width - this.cellSize * 2, this.cellSize * 2) <= this.cellSize) {
       this.buttonColor = color(220);
     }
@@ -259,9 +336,9 @@ class Tetris {
     rectMode(CORNER);
   }
 
-  blockSpawner(blockToSpawn) {
-    if(blockToSpawn === undefined) {
-      //chooses block
+  blockSpawner(blockToSpawn) { //spawns blocks into the game
+    if(blockToSpawn === undefined) { //if not given a block to spawn
+      //creates a randomized array of all seven blocks
       if(this.blockArrayRandomized.length < 4) {
         this.blockArray = [1, 2, 3, 4, 5, 6, 7];
         for(let i = 0; i < 7; i++) {
@@ -271,7 +348,7 @@ class Tetris {
       this.block = this.blockArrayRandomized.shift()[0];
     }
     else {
-      this.block = blockToSpawn;
+      this.block = blockToSpawn; //if given a block to spawn
     }
     //places chosen block into the grid
     this.droppingGrid = createEmptyGrid(this.gridWidth, this.gridHeight);
@@ -355,8 +432,9 @@ class Tetris {
     this.alreadyHeld = false;
   }
 
-  displayUpNext() {
+  displayUpNext() { //displays up next grid on the left side of the screen
     this.upNextGrid = createEmptyGrid(4, 8);
+    //adds blocks to grid
     for(let i = 0; i < 3; i++) {
       if(this.blockArrayRandomized[i][0] === 1) { //T block
         this.upNextGrid[i*3][0] = 1;
@@ -403,6 +481,7 @@ class Tetris {
     }
     textAlign(LEFT, TOP);
     text("Up Next:", width/2 + this.cellSize * 5.5, this.cellSize * 5);
+    //sets color and displays up next grid
     for(let y = 0; y < this.upNextGrid.length; y++) {
       for(let x = 0; x < this.upNextGrid[y].length; x++) {    
         if(this.upNextGrid[y][x] === 1) {
@@ -434,14 +513,14 @@ class Tetris {
     }
   }
 
-  hold() {
-    if(this.alreadyHeld === false) {
-      if(this.holdMap.has("heldBlock")) {
+  hold() { //ability to hold a block
+    if(this.alreadyHeld === false) { //cannot switch blocks multiple times
+      if(this.holdMap.has("heldBlock")) { //if there is already a held block, current block and held block are swapped
         let tempHoldBlock = this.block;
         this.blockSpawner(this.holdMap.get("heldBlock"));
         this.holdMap.set("heldBlock", tempHoldBlock);
       }
-      else {
+      else { //if there is no held block, current block is held and randomized drops continue
         this.holdMap.set("heldBlock", this.block);
         this.blockSpawner();
       }
@@ -449,7 +528,8 @@ class Tetris {
     }
   }
 
-  displayHold() {
+  displayHold() { //displays held block UI element
+    //adds held block to grid
     this.holdGrid = createEmptyGrid(4, 2);
     if(this.holdMap.get("heldBlock") === 1) { //T block
       this.holdGrid[0][1] = 1;
@@ -496,6 +576,7 @@ class Tetris {
     fill("red");
     textAlign(RIGHT, TOP);
     text("Held:", width/2 - this.cellSize * 5.5, this.cellSize * 5);
+    //colors and displays the grid containing held block
     for(let y = 0; y < this.holdGrid.length; y++) {
       for(let x = 0; x < this.holdGrid[y].length; x++) {    
         if(this.holdGrid[y][x] === 1) {
@@ -527,7 +608,7 @@ class Tetris {
     }
   }
 
-  drawGrid() {
+  drawGrid() { //displays the grid the game is played on
     //draws the grid and sets all blocks to the correct color
     for(let y = 0; y < this.gridHeight; y++) {
       for(let x = 0; x < this.gridWidth; x++) {
@@ -562,12 +643,13 @@ class Tetris {
         rect(x * this.cellSize + width/2 - this.cellSize * this.gridWidth/2, y*this.cellSize, this.cellSize);
       }
     }
+    //adds line showing where game will be lost
     strokeWeight(10);
     line(width/2 - this.cellSize * this.gridWidth/2, this.cellSize * 2 , width/2 + this.cellSize * this.gridWidth/2, this.cellSize*2);
     strokeWeight(2);
   }
 
-  gridFall() {
+  gridFall() { //drops current block
     if(this.stuck === false) {
       //creates new grid identical the one dropping a piece
       let gridDropCheck = [];
@@ -587,7 +669,7 @@ class Tetris {
                 gridDropCheck[y+1][x] = gridDropCheck[y][x];
                 gridDropCheck[y][x] = 0;
               }
-              else {
+              else { //if block cannot fall, let another function decide if it should be locked
                 if(this.hardDropping === false) {
                   this.lockTimer = millis() + this.lockTime;
                 }
@@ -596,7 +678,7 @@ class Tetris {
                 return;
               } 
             } 
-            else {
+            else { //if block cannot fall, let another function decide if it should be locked
               if(this.hardDropping === false) {
                 this.lockTimer = millis() + this.lockTime;
               }
@@ -611,7 +693,7 @@ class Tetris {
     }
   }
 
-  ghostFall() {
+  ghostFall() { //drops the ghost block
     if(this.stuck === false) {
       //creates new grid identical the one dropping a piece
       let gridDropCheck = [];
@@ -650,8 +732,8 @@ class Tetris {
     }
   }
 
-  lock() {
-    if(this.stuck === true) {
+  lock() { //locks block into static grid
+    if(this.stuck === true) { //restarts gridfall process if block is moved from a stuck position
       let stuckCount = 0;
       //checks if block can fall
       for(let y = 0; y < this.gridHeight; y++) {
@@ -671,7 +753,7 @@ class Tetris {
       }
     }
 
-    if(this.lockTimer < millis() && this.stuck === true) {
+    if(this.lockTimer < millis() && this.stuck === true) { //if block is truely stuck, lock it in place and check if line is cleared
       for(let y2 = 0; y2 < this.gridHeight; y2++) { 
         for(let x2 = 0; x2 < this.gridWidth; x2++) {
           if(this.droppingGrid[y2][x2] !== 0) {
@@ -686,8 +768,7 @@ class Tetris {
     }
   }
 
-  clearLineCheck() {
-    //checks to see if any line has been completed
+  clearLineCheck() { //checks to see if any line has been completed
     let counter = 0;
     for(let y = 0; y < this.gridHeight; y++) {
       counter = 0;
@@ -695,7 +776,7 @@ class Tetris {
         if(this.staticGrid[y][x] !== 0) {
           counter++;
         }
-        if(counter === 10) {
+        if(counter === 10) { //if line is completed, clear it and update score
           this.clearLine(y);
           this.recordScore();
           clearSound.play();
@@ -706,7 +787,7 @@ class Tetris {
     this.blockSpawner();
   }
 
-  recordScore() {
+  recordScore() { //records score based on how many lines are cleared
     this.newLinesCleared++;
     if(this.newLinesCleared === 1) {
       this.score += this.level * 100;
@@ -719,8 +800,7 @@ class Tetris {
     }
   }
 
-  displayScore() {
-    //displays how many lines have been cleared in the top right
+  displayScore() { //displays score and level
     textSize(this.cellSize * 1.5);
     fill("red");
     textAlign(LEFT, TOP);
@@ -731,7 +811,7 @@ class Tetris {
     text(this.level, width/2 - this.cellSize * 5.5, this.cellSize * 2);
   }
 
-  loseScreen() {
+  loseScreen() { //what is displayed after losing the game
     //loss text
     fill("black");
     textSize(this.cellSize * 3);
@@ -760,8 +840,7 @@ class Tetris {
     strokeWeight(2);
   }
 
-  clearLine(completedY) {
-    //clears lines that have been completed
+  clearLine(completedY) { //clears lines that have been completed
     for(let x = 0; x < this.gridWidth; x++) {
       this.staticGrid[completedY].splice(x, 1, 0);
     }
@@ -774,7 +853,7 @@ class Tetris {
     this.setLevel();
   }
 
-  setLevel() {
+  setLevel() { //sets speed of game based on how many lines have been cleared
     if(this.linesCleared % 10 === 0) {
       this.level++;
     }
@@ -822,8 +901,7 @@ class Tetris {
     }
   }
 
-  softDrop() {
-    //accelerates the block when the down arrow is held down
+  softDrop() { //drops the block faster while still allowing lock delay when down arrow is held
     if(this.softDropping === true) {
       if(keyIsDown(40)) {
         if(frameCount % 3 === 0) {
@@ -839,7 +917,7 @@ class Tetris {
     }
   }
 
-  hardDrop() {
+  hardDrop() { //drops the block instantly with no delay when space is clicked
     this.hardDropping = true;
     for(let i = 0; i < 60; i++) {
       this.gridFall();
@@ -910,7 +988,7 @@ class Tetris {
     }
   }
 
-  rotations() {
+  rotations() { //rotates the block
     //creates a 2nd grid to check for valid rotations
     let gridRotateCheck = [];
     for(let y = 0; y < this.droppingGrid.length; y++) {
@@ -919,7 +997,6 @@ class Tetris {
         gridRotateCheck[y].push(this.droppingGrid[y][x]);
       }
     }
-    let count = 0;
 
     //Rotating T-Block
     if(this.block === 1) {
@@ -1259,8 +1336,7 @@ class Tetris {
     }
   }
 
-  loseCheck() {
-    //checks if the game is lost
+  loseCheck() { //checks if the game is lost
     for(let x = 0; x < this.gridWidth; x++) {
       if(this.staticGrid[1][x] !== 0) {
         this.lose = true;

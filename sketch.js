@@ -23,19 +23,19 @@ function preload() {
 function setup() {
   //creates window, loads instance of tetris, and loops song
   createCanvas(windowWidth, windowHeight);
-  tetrisOne = new Tetris(1);
+  tetrisOne = new Tetris(1, 1, 1);
   tetrisOne.blockSpawner();
   bgSong.loop();
 }
 
 function reset() {
-  tetrisOne = new Tetris(tetrisOne.masterVolume);
+  tetrisOne = new Tetris(tetrisOne.masterVolume, tetrisOne.musicVolume, tetrisOne.sfxVolume);
   tetrisOne.blockSpawner();
 }
 
 function draw() {
   background(220);
-  if(!tetrisOne.menu && !tetrisOne.options) { //if in game, show grid, score, and ui items
+  if(!tetrisOne.menu && !tetrisOne.options && !tetrisOne.instructions) { //if in game, show grid, score, and ui items
     tetrisOne.drawGrid();
     tetrisOne.displayScore();
     tetrisOne.displayUpNext();
@@ -65,6 +65,9 @@ function draw() {
   }
   else if(tetrisOne.options === true) { //shows options menu
     tetrisOne.optionsMenu();
+  }
+  else if(tetrisOne.instructions === true) {
+    tetrisOne.instructionsMenu();
   }
 }
 
@@ -128,11 +131,15 @@ function mousePressed() {
     }
   }
   else if(tetrisOne.menu) { //buttons on main menu
-    if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) { //play button
+    if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*3, height * 0.7) <= tetrisOne.cellSize * 2.25) { //play button
       tetrisOne.menu = false;
     }
-    if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*3, height * 0.75) <= tetrisOne.cellSize * 2.25) { //options button
+    if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*3, height * 0.7) <= tetrisOne.cellSize * 2.25) { //options button
       tetrisOne.options = true;
+      tetrisOne.menu = false;
+    }
+    if(mouseX >= width/2 - tetrisOne.cellSize * 4.5 && mouseX <= width/2 + tetrisOne.cellSize * 4.5 && mouseY >= height*0.9 - tetrisOne.cellSize * 1.5 && mouseY <= height*0.9 + tetrisOne.cellSize * 1.5) {
+      tetrisOne.instructions = true;
       tetrisOne.menu = false;
     }
   }
@@ -143,11 +150,33 @@ function mousePressed() {
     }
     //increase master volume
     else if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*5.75, height/4 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) { 
-      tetrisOne.volumeAdjuster(0, 1);
+      tetrisOne.volumeAdjuster("master", 1);
     }
     //decrease master volume
     else if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*5.75, height/4 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) {
-      tetrisOne.volumeAdjuster(0, -1);
+      tetrisOne.volumeAdjuster("master", -1);
+    }
+    //increase music volume
+    else if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*5.75, height/2 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) { 
+      tetrisOne.volumeAdjuster("music", 1);
+    }
+    //decrease music volume
+    else if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*5.75, height/2 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) {
+      tetrisOne.volumeAdjuster("music", -1);
+    }
+    //increase sfx volume
+    else if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*5.75, height*0.75 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) { 
+      tetrisOne.volumeAdjuster("sfx", 1);
+    }
+    //decrease sfx volume
+    else if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*5.75, height*0.75 + tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) {
+      tetrisOne.volumeAdjuster("sfx", -1);
+    }
+  }
+  else if(tetrisOne.instructions) {
+    if(dist(mouseX, mouseY, width / 2 + tetrisOne.cellSize * 6, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) { //return to main menu
+      tetrisOne.menu = true;
+      tetrisOne.instructions = false;
     }
   }
   else { //pause button in-game
@@ -158,7 +187,7 @@ function mousePressed() {
 }
 
 class Tetris { //all data and behaviours needed to instantiate a game of Tetris
-  constructor(masterVolume) { //holds all variables needed for Tetris to be played
+  constructor(masterVolume, musicVolume, sfxVolume) { //holds all variables needed for Tetris to be played
     this.gridHeight = 22;
     this.gridWidth = 10;
     this.block;
@@ -193,7 +222,10 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     this.paused = false;
     this.menu = true;
     this.options = false;
+    this.instructions = false;
     this.masterVolume = masterVolume;
+    this.musicVolume = musicVolume;
+    this.sfxVolume = sfxVolume;
   }
 
   menuScreen() { //shows main menu containing title, play button, options button, and instructions button
@@ -207,27 +239,42 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     textSize(this.cellSize * 3);
     text("T E T R I S", width/2, this.cellSize * 7);
 
-    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //play button
+    //play button
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*3, height * 0.7) <= this.cellSize * 2.25) {
       this.buttonColor = color(220);
     }
     else {
       this.buttonColor = color(180);
     }
     fill(this.buttonColor);
-    rect(width/2 - this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
+    rect(width/2 - this.cellSize*3, height * 0.7, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
     fill(0);
-    triangle(width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 + this.cellSize*1.5, width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.75 - this.cellSize*1.5, width/2 - this.cellSize*3 + this.cellSize*1.75, height * 0.75);
+    triangle(width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.7 + this.cellSize*1.5, width/2 - this.cellSize*3 - this.cellSize*1.35, height * 0.7 - this.cellSize*1.5, width/2 - this.cellSize*3 + this.cellSize*1.75, height * 0.7);
 
-    if(dist(mouseX, mouseY, width/2 + this.cellSize*3, height * 0.75) <= this.cellSize * 2.25) { //options button
+    //options button
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*3, height * 0.7) <= this.cellSize * 2.25) {
       this.buttonColor = color(220);
     }
     else {
       this.buttonColor = color(180);
     }
     fill(this.buttonColor);
-    rect(width/2 + this.cellSize*3, height * 0.75, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
+    rect(width/2 + this.cellSize*3, height * 0.7, this.cellSize * 4.5, this.cellSize * 4.5, this.cellSize);
     imageMode(CENTER);
-    image(optionsIcon, width/2 + this.cellSize*3, height * 0.75);
+    image(optionsIcon, width/2 + this.cellSize*3, height * 0.7);
+
+    //instructions button
+    if(mouseX >= width/2 - this.cellSize * 4.5 && mouseX <= width/2 + this.cellSize * 4.5 && mouseY >= height*0.9 - this.cellSize * 1.5 && mouseY <= height*0.9 + this.cellSize * 1.5) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2, height * 0.9, this.cellSize * 9, this.cellSize * 3, this.cellSize);
+    textSize(this.cellSize*1);
+    fill("black");
+    text("INSTRUCTIONS", width/2, height*0.9);
   }
 
   optionsMenu() { //shows options menu containing volume adjustments
@@ -250,6 +297,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
 
+    //Master Volume
     fill("red");
     text("Master Volume:", width/2, height/4);
     rectMode(CORNER);
@@ -286,21 +334,135 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     rect(width/2 - this.cellSize*6.5, height/4 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
     fill(0);
     triangle(width/2 - this.cellSize*5.75 + this.cellSize*0.45, height/4 + this.cellSize * 2 + this.cellSize*0.5, width/2 - this.cellSize*5.75 + this.cellSize*0.45, height/4 + this.cellSize * 2 - this.cellSize*0.5, width/2 - this.cellSize*5.75 - this.cellSize*0.58, height/4 + this.cellSize * 2);
+
+
+    //Music Volume
+    fill("red");
+    text("Music Volume:", width/2, height/2);
+    rectMode(CORNER);
+    for(let i = 1; i < 11; i++) {
+      if(this.musicVolume * 10 < i) {
+        fill(160);
+      }
+      else {
+        fill(240);
+      }
+      rect(width/2 - 4.75*this.cellSize + i*this.cellSize - this.cellSize, height/2 + this.cellSize, this.cellSize / 2, this.cellSize*2);
+    }
+
+    //right arrow for music volume
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*5.75, height/2 + this.cellSize * 2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 + this.cellSize*5, height/2 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 + this.cellSize*5.75 - this.cellSize*0.45, height/2 + this.cellSize * 2 + this.cellSize*0.5, width/2 + this.cellSize*5.75 - this.cellSize*0.45, height/2 + this.cellSize * 2 - this.cellSize*0.5, width/2 + this.cellSize*5.75 + this.cellSize*0.58, height/2 + this.cellSize * 2);
+
+    //left arrow for music volume
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*5.75, height/2 + this.cellSize * 2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 - this.cellSize*6.5, height/2 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 - this.cellSize*5.75 + this.cellSize*0.45, height/2 + this.cellSize * 2 + this.cellSize*0.5, width/2 - this.cellSize*5.75 + this.cellSize*0.45, height/2 + this.cellSize * 2 - this.cellSize*0.5, width/2 - this.cellSize*5.75 - this.cellSize*0.58, height/2 + this.cellSize * 2);
+
+
+    //sfx Volume
+    fill("red");
+    text("sfx Volume:", width/2, height*0.75);
+    rectMode(CORNER);
+    for(let i = 1; i < 11; i++) {
+      if(this.sfxVolume * 10 < i) {
+        fill(160);
+      }
+      else {
+        fill(240);
+      }
+      rect(width/2 - 4.75*this.cellSize + i*this.cellSize - this.cellSize, height*0.75 + this.cellSize, this.cellSize / 2, this.cellSize*2);
+    }
+
+    //right arrow for sfx volume
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*5.75, height*0.75 + this.cellSize * 2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 + this.cellSize*5, height*0.75 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 + this.cellSize*5.75 - this.cellSize*0.45, height*0.75 + this.cellSize * 2 + this.cellSize*0.5, width/2 + this.cellSize*5.75 - this.cellSize*0.45, height*0.75 + this.cellSize * 2 - this.cellSize*0.5, width/2 + this.cellSize*5.75 + this.cellSize*0.58, height*0.75 + this.cellSize * 2);
+
+    //left arrow for sfx volume
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*5.75, height*0.75 + this.cellSize * 2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 - this.cellSize*6.5, height*0.75 + this.cellSize * 1.25, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 - this.cellSize*5.75 + this.cellSize*0.45, height*0.75 + this.cellSize * 2 + this.cellSize*0.5, width/2 - this.cellSize*5.75 + this.cellSize*0.45, height*0.75 + this.cellSize * 2 - this.cellSize*0.5, width/2 - this.cellSize*5.75 - this.cellSize*0.58, height*0.75 + this.cellSize * 2);
+  }
+
+  instructionsMenu() {
+    fill(127, 127, 127);
+    rectMode(CENTER);
+    rect(width/2, height/2, this.cellSize*(this.gridWidth + 5) , this.cellSize*this.gridHeight);
+
+    if(dist(mouseX, mouseY, width - width / 2 + this.cellSize * 6, this.cellSize * 2) <= this.cellSize) { //return to menu button
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    rectMode(CENTER);
+    fill(this.buttonColor);
+    rect(width / 2 + this.cellSize * 6, this.cellSize * 2, this.cellSize * 2, this.cellSize * 2, this.cellSize/5);
+    fill(0);
+    textAlign(CENTER);
+    textSize(this.cellSize * 2);
+    text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
+    rectMode(CORNER);
   }
 
   volumeAdjuster(volumeType, directionOfChange) {
     let currentType = null;
-    if(volumeType === 0) {
+    if(volumeType === "master") {
       currentType = this.masterVolume;
+    }
+    else if(volumeType === "music") {
+      currentType = this.musicVolume;
+    }
+    else if(volumeType === "sfx") {
+      currentType = this.sfxVolume;
     }
 
     if(currentType + directionOfChange*0.1 >= 0 && currentType + directionOfChange*0.1 <= 1) {
       currentType += 0.1*directionOfChange;
     }
 
-    if(volumeType === 0) {
+    if(volumeType === "master") {
       this.masterVolume = currentType;
       outputVolume(this.masterVolume);
+    }
+    else if(volumeType === "music") {
+      this.musicVolume = currentType;
+      bgSong.setVolume(this.musicVolume);
+    }
+    else if(volumeType === "sfx") {
+      this.sfxVolume = currentType;
+      tetriminoClick.setVolume(this.sfxVolume);
+      clearSound.setVolume(this.sfxVolume);
     }
   }
 

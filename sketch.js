@@ -174,9 +174,21 @@ function mousePressed() {
     }
   }
   else if(tetrisOne.instructions) {
-    if(dist(mouseX, mouseY, width / 2 + tetrisOne.cellSize * 6, tetrisOne.cellSize * 2) <= tetrisOne.cellSize) { //return to main menu
+    if(dist(mouseX, mouseY, width / 2 + tetrisOne.cellSize * 6, tetrisOne.cellSize * 2) <= tetrisOne.cellSize * 0.75) { //return to main menu
       tetrisOne.menu = true;
       tetrisOne.instructions = false;
+    }
+    //right arrow for next page
+    if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*5.75, height/2 + tetrisOne.cellSize * 9) <= tetrisOne.cellSize * 0.75) {
+      if(tetrisOne.page < 3) {
+        tetrisOne.page++;
+      }
+    }
+    //left arrow for previous page
+    if(dist(mouseX, mouseY, width/2 - tetrisOne.cellSize*5.75, tetrisOne.cellSize * 7.5 + height/2 + tetrisOne.cellSize) <= tetrisOne.cellSize) {
+      if(tetrisOne.page > 0) {
+        tetrisOne.page--;
+      }
     }
   }
   else { //pause button in-game
@@ -226,6 +238,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     this.masterVolume = masterVolume;
     this.musicVolume = musicVolume;
     this.sfxVolume = sfxVolume;
+    this.page = 0;
   }
 
   menuScreen() { //shows main menu containing title, play button, options button, and instructions button
@@ -433,6 +446,75 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     textSize(this.cellSize * 2);
     text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
+
+    if(this.page === 0) {
+      textSize(this.cellSize);
+      text("The goal of Tetris is to", width/2, height/2 - this.cellSize * 2);
+      text("Fill as many rows as you can.", width/2, height/2 - this.cellSize);
+      text("Be careful though!", width/2, height/2);
+      text("As you clear more lines,", width/2, height/2 + this.cellSize);
+      text("The game speeds up.", width/2, height/2 + this.cellSize*2);
+
+      text("1/4", width/2, height - this.cellSize);
+    }
+    else if(this.page === 1) {
+      textSize(this.cellSize * 0.95);
+      text("As a block drops, you can:", width/2, height/2 - this.cellSize * 3);
+      text("Move the block horizontally", width/2, height/2 - this.cellSize);
+      text("Using the Left & Right Arrow Keys,", width/2, height/2);
+      text("Rotate the block clockwise", width/2, height/2 + this.cellSize * 2);
+      text("Using the Up Arrow Key.", width/2, height/2 + this.cellSize * 3);
+
+      textSize(this.cellSize);
+      text("2/4", width/2, height - this.cellSize);
+    }
+    else if(this.page === 2) {
+      textSize(this.cellSize * 0.95);
+      text("You can also influence", width/2, height/2 - this.cellSize * 3);
+      text("The speed at which the block falls:", width/2, height/2 - this.cellSize*2);
+      text("Holding the Down Arrow", width/2, height/2);
+      text("Speeds up the block ", width/2, height/2 + this.cellSize);
+      text("while still allowing a lock delay,", width/2, height/2 + this.cellSize * 2);
+      text("Tapping the Space Bar", width/2, height/2 + this.cellSize * 4);
+      text("Drops the block instantly ", width/2, height/2 + this.cellSize * 5);
+      text("With no lock delay.", width/2, height/2 + this.cellSize * 6);
+
+      textSize(this.cellSize);
+      text("3/4", width/2, height - this.cellSize);
+    }
+    else if(this.page === 3) {
+      textSize(this.cellSize);
+      text("With this knowledge,", width/2, height/2 - this.cellSize * 2);
+      text("You should be able to both", width/2, height/2 - this.cellSize);
+      text("Play and succeed in Tetris", width/2, height/2);
+      text("Good Luck!", width/2, height/2 + this.cellSize);
+
+      text("3/4", width/2, height - this.cellSize);
+    }
+
+    //right arrow for next page
+    if(dist(mouseX, mouseY, width/2 + this.cellSize*5.75, height/2 + this.cellSize * 9) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 + this.cellSize*5, this.cellSize * 8.25 + height/2, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 + this.cellSize*5.3, this.cellSize * 9.5 + height/2, width/2 + this.cellSize*5.3, this.cellSize * 8.5 + height/2, width/2 + this.cellSize*6.33, this.cellSize * 9 + height/2);
+
+    //left arrow for previous
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*5.75, this.cellSize * 8.5 + height/2) <= this.cellSize * 0.75) {
+      this.buttonColor = color(220);
+    }
+    else {
+      this.buttonColor = color(180);
+    }
+    fill(this.buttonColor);
+    rect(width/2 - this.cellSize*6.5, this.cellSize * 8.25 + height/2, this.cellSize * 1.5, this.cellSize * 1.5, this.cellSize/4);
+    fill(0);
+    triangle(width/2 - this.cellSize*6.2, this.cellSize * 9 + height/2, width/2 - this.cellSize*5.3, this.cellSize * 8.5 + height/2, width/2 - this.cellSize*5.3, this.cellSize * 9.5 + height/2);
   }
 
   volumeAdjuster(volumeType, directionOfChange) {

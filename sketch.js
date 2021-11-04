@@ -1,10 +1,8 @@
-// Project Title
-// Your Name
-// Date
-//
-// Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// CS30 Major Project
+// Alex Colborne
+// 11/4/2021
 
+//creating variables for class & variables for assets
 let tetrisOne;
 let optionsIcon, tetriminoClick, clearSound, bgSong;
 let bgMusicPlay, sfxPlay;

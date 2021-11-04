@@ -180,7 +180,7 @@ function mousePressed() {
     }
     //right arrow for next page
     if(dist(mouseX, mouseY, width/2 + tetrisOne.cellSize*5.75, height/2 + tetrisOne.cellSize * 9) <= tetrisOne.cellSize * 0.75) {
-      if(tetrisOne.page < 3) {
+      if(tetrisOne.page < 4) {
         tetrisOne.page++;
       }
     }
@@ -427,12 +427,14 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     triangle(width/2 - this.cellSize*5.75 + this.cellSize*0.45, height*0.75 + this.cellSize * 2 + this.cellSize*0.5, width/2 - this.cellSize*5.75 + this.cellSize*0.45, height*0.75 + this.cellSize * 2 - this.cellSize*0.5, width/2 - this.cellSize*5.75 - this.cellSize*0.58, height*0.75 + this.cellSize * 2);
   }
 
-  instructionsMenu() {
+  instructionsMenu() { //shows the instructions menu
+    //basic setup of background
     fill(127, 127, 127);
     rectMode(CENTER);
     rect(width/2, height/2, this.cellSize*(this.gridWidth + 5) , this.cellSize*this.gridHeight);
 
-    if(dist(mouseX, mouseY, width - width / 2 + this.cellSize * 6, this.cellSize * 2) <= this.cellSize) { //return to menu button
+    //return to menu button
+    if(dist(mouseX, mouseY, width - width / 2 + this.cellSize * 6, this.cellSize * 2) <= this.cellSize) {
       this.buttonColor = color(220);
     }
     else {
@@ -447,6 +449,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
 
+    //list of text on each page
     if(this.page === 0) {
       textSize(this.cellSize);
       text("The goal of Tetris is to", width/2, height/2 - this.cellSize * 2);
@@ -455,7 +458,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
       text("As you clear more lines,", width/2, height/2 + this.cellSize);
       text("The game speeds up.", width/2, height/2 + this.cellSize*2);
 
-      text("1/4", width/2, height - this.cellSize);
+      text("1/5", width/2, height - this.cellSize);
     }
     else if(this.page === 1) {
       textSize(this.cellSize * 0.95);
@@ -466,7 +469,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
       text("Using the Up Arrow Key.", width/2, height/2 + this.cellSize * 3);
 
       textSize(this.cellSize);
-      text("2/4", width/2, height - this.cellSize);
+      text("2/5", width/2, height - this.cellSize);
     }
     else if(this.page === 2) {
       textSize(this.cellSize * 0.95);
@@ -480,16 +483,26 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
       text("With no lock delay.", width/2, height/2 + this.cellSize * 6);
 
       textSize(this.cellSize);
-      text("3/4", width/2, height - this.cellSize);
+      text("3/5", width/2, height - this.cellSize);
     }
     else if(this.page === 3) {
+      textSize(this.cellSize);
+      text("You can also hold a block", width/2, height/2 - this.cellSize * 3);
+      text("Using the C button.", width/2, height/2 - this.cellSize * 2);
+      text("Remember to watch", width/2, height/2);
+      text("The up next menu", width/2, height/2 + this.cellSize);
+      text("To prepare for upcoming blocks!", width/2, height/2 + this.cellSize *2);
+
+      text("4/5", width/2, height - this.cellSize);
+    }
+    else if(this.page === 4) {
       textSize(this.cellSize);
       text("With this knowledge,", width/2, height/2 - this.cellSize * 2);
       text("You should be able to both", width/2, height/2 - this.cellSize);
       text("Play and succeed in Tetris", width/2, height/2);
       text("Good Luck!", width/2, height/2 + this.cellSize);
 
-      text("3/4", width/2, height - this.cellSize);
+      text("5/5", width/2, height - this.cellSize);
     }
 
     //right arrow for next page
@@ -505,7 +518,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     triangle(width/2 + this.cellSize*5.3, this.cellSize * 9.5 + height/2, width/2 + this.cellSize*5.3, this.cellSize * 8.5 + height/2, width/2 + this.cellSize*6.33, this.cellSize * 9 + height/2);
 
     //left arrow for previous
-    if(dist(mouseX, mouseY, width/2 - this.cellSize*5.75, this.cellSize * 8.5 + height/2) <= this.cellSize * 0.75) {
+    if(dist(mouseX, mouseY, width/2 - this.cellSize*5.75, this.cellSize * 9 + height/2) <= this.cellSize * 0.75) {
       this.buttonColor = color(220);
     }
     else {
@@ -517,7 +530,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     triangle(width/2 - this.cellSize*6.2, this.cellSize * 9 + height/2, width/2 - this.cellSize*5.3, this.cellSize * 8.5 + height/2, width/2 - this.cellSize*5.3, this.cellSize * 9.5 + height/2);
   }
 
-  volumeAdjuster(volumeType, directionOfChange) {
+  volumeAdjuster(volumeType, directionOfChange) { //changes volume of a either all output or a specific sound file
     let currentType = null;
     if(volumeType === "master") {
       currentType = this.masterVolume;
@@ -529,6 +542,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
       currentType = this.sfxVolume;
     }
 
+    //sanity check to keep volume between 0 and 1
     if(currentType + directionOfChange*0.1 >= 0 && currentType + directionOfChange*0.1 <= 1) {
       currentType += 0.1*directionOfChange;
     }
@@ -1082,6 +1096,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     text("R E S E T", width/2, height * 3/4 + 10);
     rectMode(CORNER);
     strokeWeight(2);
+    textStyle(NORMAL);
   }
 
   clearLine(completedY) { //clears lines that have been completed

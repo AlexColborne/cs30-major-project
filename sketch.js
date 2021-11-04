@@ -249,6 +249,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
 
     fill("red");
     textAlign(CENTER, CENTER);
+    textStyle(BOLD);
     textSize(this.cellSize * 3);
     text("T E T R I S", width/2, this.cellSize * 7);
 
@@ -287,6 +288,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     rect(width/2, height * 0.9, this.cellSize * 9, this.cellSize * 3, this.cellSize);
     textSize(this.cellSize*1);
     fill("black");
+    textStyle(NORMAL);
     text("INSTRUCTIONS", width/2, height*0.9);
   }
 
@@ -307,6 +309,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     fill(0);
     textAlign(CENTER);
     textSize(this.cellSize * 2);
+    textStyle(NORMAL);
     text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
 
@@ -446,6 +449,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     fill(0);
     textAlign(CENTER);
     textSize(this.cellSize * 2);
+    textStyle(NORMAL);
     text("X", width / 2 + this.cellSize * 6, this.cellSize * 2.2);
     rectMode(CORNER);
 
@@ -549,6 +553,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
 
     if(volumeType === "master") {
       this.masterVolume = currentType;
+      // eslint-disable-next-line no-undef
       outputVolume(this.masterVolume);
     }
     else if(volumeType === "music") {
@@ -738,6 +743,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
       }
     }
     textAlign(LEFT, TOP);
+    textStyle(NORMAL);
     text("Up Next:", width/2 + this.cellSize * 5.5, this.cellSize * 5);
     //sets color and displays up next grid
     for(let y = 0; y < this.upNextGrid.length; y++) {
@@ -832,6 +838,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
       this.holdGrid[1][3] = 7;
     }
     fill("red");
+    textStyle(NORMAL);
     textAlign(RIGHT, TOP);
     text("Held:", width/2 - this.cellSize * 5.5, this.cellSize * 5);
     //colors and displays the grid containing held block

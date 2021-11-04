@@ -1084,7 +1084,7 @@ class Tetris { //all data and behaviours needed to instantiate a game of Tetris
     strokeWeight(this.cellSize / 10);
     text("You Lost!", width/2, height/4);
     textSize(this.cellSize * 1.5);
-    text("You Cleared " + this.linesCleared + " Lines!", width/2, height / 2);
+    text("Your Scored " + this.score + " Points!", width/2, height / 2);
 
     //reset button
     if(mouseX >= width/2 - this.cellSize * 4.5 && mouseX <= width/2 + this.cellSize * 4.5 && mouseY >= height * 3/4 - this.cellSize * 3/2 && mouseY <= height * 3/4 + this.cellSize * 3/2) {

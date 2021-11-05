@@ -5,7 +5,6 @@
 //creating variables for class & variables for assets
 let tetrisOne;
 let optionsIcon, tetriminoClick, clearSound, bgSong;
-let bgMusicPlay, sfxPlay;
 
 
 function preload() {
@@ -117,6 +116,7 @@ function keyPressed() {
 }
 
 function mousePressed() {
+  tetriminoClick.play();
   //clicking buttons
   if(tetrisOne.lose) { //reset button
     if(mouseX >= width/2 - tetrisOne.cellSize * 4.5 && mouseX <= width/2 + tetrisOne.cellSize * 4.5 && mouseY >= height * 3/4 - tetrisOne.cellSize * 3/2 && mouseY <= height * 3/4 + tetrisOne.cellSize * 3/2) {
